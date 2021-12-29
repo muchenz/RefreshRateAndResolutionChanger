@@ -1,12 +1,129 @@
-﻿<Window x:Class="RefreshRateAndResolutionChanger.MainWindow"
+﻿<Window x:Class="RefreshRateWpfApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:RefreshRateAndResolutionChanger"
+        xmlns:local="clr-namespace:RefreshRateWpfApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+        Title="Refresh Rate App" Height="750" Width="400" FontSize="18"
+        xmlns:tb="http://www.hardcodet.net/taskbar"        
+        Closing="OnClose" 
+        StateChanged="Window_StateChanged"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Name="WindowApp">
+
+
+    <Grid >
+
+        <StackPanel VerticalAlignment="Top">
+            <Menu Width="Auto" Height="20">
+                <MenuItem Header="_File">
+                    <MenuItem x:Name="AppSave" Header="_Save" HorizontalAlignment="Left" Width="140" Click="AppSave_Click"/>
+                    <MenuItem x:Name="AppHide" Header="_Hide" HorizontalAlignment="Left" Width="140" Click="AppHide_Click"/>
+
+                    <MenuItem x:Name="AppExit" Header="E_xit" HorizontalAlignment="Left" Width="140" Click="AppExit_Click"/>
+                </MenuItem>
+
+                <MenuItem Header="_Help">
+                    <MenuItem x:Name="About" Header="About" HorizontalAlignment="Left" Width="140" Click="AppAbout_Click"/>
+                </MenuItem>
+            </Menu>
+        </StackPanel>
+        <StackPanel Margin="30">
+
+            <StackPanel>
+                <tb:TaskbarIcon x:Name="tbi" 
+                ToolTipText="Refresh Rate" TrayLeftMouseDown="tbi_TrayLeftMouseDown" TrayRightMouseDown="tbi_TrayRightMouseDown">
+                    <tb:TaskbarIcon.ContextMenu>
+                        <ContextMenu Name="ContextMenu">
+                            <MenuItem Name="header" FontWeight="Black" />
+                            <Separator />
+                            <!--<MenuItem Header="50 Hz"  Click="Radio50_Checked"/>
+                        <MenuItem Header="60 Hz" Click="Radio60_Checked"/>-->
+                        </ContextMenu>
+                    </tb:TaskbarIcon.ContextMenu>
+                </tb:TaskbarIcon>
+
+                <!--<ListView ItemsSource="{Binding PosiibleRefreshrateList}" >
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox Margin="0,5,10,0" IsChecked="{Binding Choosed}"></CheckBox>
+                                <TextBlock Text="{Binding RefreshRateName}"></TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+
+                </ListView>-->
+            </StackPanel>
+
+            <StackPanel x:Name="StackPanelAll">
+
+                <GroupBox Header="Settings" FontSize="16">
+                    <StackPanel Orientation="Vertical" Margin="10">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="RadioButtinAllResMode" IsChecked="{Binding AllResolutionMode}" GroupName="Mode"/>
+                            <TextBlock Margin="10,-4,0,0" Text="All Resolution Mode" ></TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <RadioButton x:Name="RadioButtinAcualResMode" GroupName="Mode"/>
+                            <TextBlock Margin="10,-4,0,0" Text="Actual Only Resolution Mode"></TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                            <CheckBox IsChecked="{Binding RunAsMinimalized}" />
+                            <TextBlock Margin="10,-4,0,0" Text="Run as minimalized"></TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                            <CheckBox IsChecked="{Binding RunStartup}" />
+                            <TextBlock Margin="10,-4,0,0" Text="Run at Windows startup"></TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+
+                <GroupBox Header="Test Time" FontSize="16">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding ElementName=Slider, Path=Value}" ></TextBlock>
+                            <TextBlock Text=" seconds"/>
+                        </StackPanel>
+                        <Slider x:Name="Slider" Value="{Binding TestTime}" Minimum="1" Maximum="20" />
+
+                    </StackPanel>
+                </GroupBox>
+                <TextBlock Text="Actual Setting:" FontSize="16" Margin="0,15,0,0"></TextBlock>
+                <TextBlock x:Name="textBlockActualRefreshRate" Margin="15,5,0,0" FontWeight="DemiBold">textBlockActualRefreshRate</TextBlock>
+
+                <ListView ItemsSource="{Binding PosiibleRefreshrateList}" Margin="0,20,0,0" Height="300">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                <CheckBox Margin="0,5,10,0" IsChecked="{Binding Choosed}" Click="CheckBoxInListView_Click"></CheckBox>
+                                <TextBlock Margin="10,0,10,0" Text="{Binding ResolutionName}" Width="100"></TextBlock>
+                                <TextBlock Margin="10,0,5,0" Text="{Binding RefreshRateName}" Width="70"></TextBlock>
+                                <Button FontSize="16" Margin="0,2,10,2" Padding="3,1,3,1" Click="Button_Click_TestAsync">Test</Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+
+                </ListView>
+                <Popup Name="Popup" VerticalAlignment="Center" VerticalOffset="-450" HorizontalOffset="30">
+                    <Border BorderThickness="6" Background="Yellow" Padding="10" CornerRadius="10" >
+                        <StackPanel Background="Yellow">
+                            <Label Name="Popup_Label1" FontWeight="Bold"></Label>
+                            <Label HorizontalAlignment="Center" FontSize="36" FontWeight="Bold" Margin="5" Name="Popup_Label2"></Label>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+                <StackPanel Orientation="Horizontal">
+                    <!--<Button Click="Button_Click_Refresh" Margin="5">Refresh</Button>-->
+                    <Button Click="Button_Click_Choose" Margin="65, 10,0,0" Padding="5,2,5,2" IsEnabled="{Binding DirtySetting}">Save to File nad Tray</Button>
+                </StackPanel>
+            </StackPanel>
+
+            <!--<Label Name="LabelCounter"> </Label>-->
+        </StackPanel>
+
     </Grid>
+
 </Window>
