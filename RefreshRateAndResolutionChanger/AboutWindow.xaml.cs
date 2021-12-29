@@ -23,5 +23,25 @@ namespace RefreshRateAndResolutionChanger
         {
             InitializeComponent();
         }
+
+
+        private void okButton_Click(object sender, RoutedEventArgs e) =>
+            DialogResult = true;
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+
+        }
+
+        private void Hyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/muchenz/RefreshRateWpfApp");
+        }
+
+        private void HyperlinkWiki_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/muchenz/RefreshRateWpfApp/wiki");
+
+        }
     }
 }
