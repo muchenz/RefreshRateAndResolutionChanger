@@ -24,12 +24,12 @@
             <TextBlock Margin="0,0,0,10" Text="Author: muchenz"></TextBlock>
             <TextBlock Margin="0,0,0,2" Text="Source Code:"></TextBlock>
             <TextBlock ><Hyperlink Click="Hyperlink_Click" >
-                https://github.com/muchenz/RefreshRateWpfApp
+                https://github.com/muchenz/RefreshRateAndResolutionChanger
             </Hyperlink></TextBlock>
 
             <TextBlock Margin="0,10,0,2" Text="Wiki:"></TextBlock>
             <TextBlock  ><Hyperlink Click="HyperlinkWiki_Click" >
-                https://github.com/muchenz/RefreshRateWpfApp/wiki
+                https://github.com/muchenz/RefreshRateAndResolutionChanger/wiki
             </Hyperlink></TextBlock>
             <Button Margin="0,20,0,0" Name="okButton" Width="50" Padding="3" Click="okButton_Click" IsDefault="True">OK</Button>
         </StackPanel>

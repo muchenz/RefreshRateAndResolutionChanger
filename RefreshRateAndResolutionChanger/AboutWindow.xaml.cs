@@ -35,12 +35,12 @@ namespace RefreshRateAndResolutionChanger
 
         private void Hyperlink_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/muchenz/RefreshRateWpfApp");
+            System.Diagnostics.Process.Start("https://github.com/muchenz/RefreshRateAndResolutionChanger");
         }
 
         private void HyperlinkWiki_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/muchenz/RefreshRateWpfApp/wiki");
+            System.Diagnostics.Process.Start("https://github.com/muchenz/RefreshRateAndResolutionChanger/wiki");
 
         }
     }
