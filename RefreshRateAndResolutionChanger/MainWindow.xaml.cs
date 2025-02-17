@@ -627,6 +627,7 @@ namespace RefreshRateWpfApp
         {
             this.textBlockActualRefreshRate.Text = name;
             header.Header = this.textBlockActualRefreshRate.Text;
+            header.IsEnabled = false;
         }
 
         void SetActalRefreshRateAndHeaderLabel()
