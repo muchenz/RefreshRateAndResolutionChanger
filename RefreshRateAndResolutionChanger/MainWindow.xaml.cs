@@ -599,6 +599,34 @@ namespace RefreshRateWpfApp
             SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRategString());
 
             StackPanelAll.IsEnabled = false;
+            
+            //////////////////////
+
+            // get dpi
+            var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
+    
+            // get screen size
+            var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
+            var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
+           
+         
+            var popupWidth = Popup.ActualWidth;
+            var popupHeight = Popup.ActualHeight;
+
+            var scaledWidth = popupWidth/ dpiScaleX;
+            var scaledHeight = popupHeight / dpiScaleY;
+
+            var offsetX = (screenWidth- popupWidth) / 2;
+            var offsetY = (screenHeight - popupHeight) / 2;
+
+
+            Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
+            Popup.HorizontalOffset = offsetX;
+            Popup.VerticalOffset = offsetY;
+    
+            //////////////////////////////////
+
 
             Popup.IsOpen = true;
             Popup_Label1.Content = "Test: " + GetActualResolutionAndRefresRategString();
