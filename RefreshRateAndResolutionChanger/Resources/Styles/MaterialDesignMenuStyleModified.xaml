@@ -162,7 +162,8 @@ BasedOn="{x:Null}">
                          Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer, TypeInTargetAssembly={x:Type FrameworkElement}}}"
                          wpf:ScrollViewerAssist.IgnorePadding="{Binding Path=(wpf:ScrollViewerAssist.IgnorePadding), RelativeSource={RelativeSource TemplatedParent}}"
                          wpf:ScrollViewerAssist.PaddingMode="{Binding Path=(wpf:ScrollViewerAssist.PaddingMode), RelativeSource={RelativeSource TemplatedParent}}">
-                                            <Grid Margin="{Binding RelativeSource={RelativeSource Mode=Self}, Path=(wpf:MenuAssist.MenuItemsPresenterMargin)}" RenderOptions.ClearTypeHint="Enabled">
+                                            <!--<Grid Margin="{Binding RelativeSource={RelativeSource Mode=Self}, Path=(wpf:MenuAssist.MenuItemsPresenterMargin)}" RenderOptions.ClearTypeHint="Enabled">-->
+                                            <Grid Margin="0 3 0 3" RenderOptions.ClearTypeHint="Enabled">
                                                 <Canvas Width="0"
                        Height="0"
                        HorizontalAlignment="Left"
@@ -195,6 +196,7 @@ BasedOn="{x:Null}">
                         </Trigger>
                         <Trigger Property="Role" Value="SubmenuItem">
                             <Setter Property="Height" Value="24" />
+                            <!--<Setter Property="Height" Value="32" />-->
                             <Setter TargetName="BoldHeaderPresenter" Property="Visibility" Value="Collapsed" />
                             <Setter TargetName="InputGestureTextWrapper" Property="Visibility" Value="Visible" />
                         </Trigger>
@@ -280,6 +282,7 @@ BasedOn="{x:Null}">
         <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="wpf:MenuAssist.TopLevelMenuItemHeight" Value="24" />
+        <!--<Setter Property="wpf:MenuAssist.TopLevelMenuItemHeight" Value="48" />-->
     </Style>
 
     <Style x:Key="MaterialDesignContextMenu"
