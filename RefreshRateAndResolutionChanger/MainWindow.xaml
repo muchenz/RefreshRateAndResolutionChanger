@@ -4,6 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RefreshRateWpfApp"
+        xmlns:localStyle="clr-namespace:RefreshRateAndResolutionChanger.Resources.Styles"
+        xmlns:localStyleTest="clr-namespace:RefreshRateAndResolutionChanger.Resources.Styles.Test"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Refresh Rate App" Height="850" Width="400" FontSize="18"
@@ -18,18 +20,21 @@
 
         <DockPanel>
 
-            <Menu Width="Auto" Height="40" FontSize="14" Style="{StaticResource MaterialDesignMenu}" VerticalAlignment="Top" DockPanel.Dock="Top" >
-                <MenuItem Header="_File" >
-                    <MenuItem x:Name="AppSave" Header="_Save" HorizontalAlignment="Left" Width="140" Click="AppSave_Click"  />
-                    <MenuItem x:Name="AppHide" Header="_Hide" HorizontalAlignment="Left" Width="140" Click="AppHide_Click" />
+            <localStyle:CustomMenu SubmenuItemHeight="24"  Width="Auto" Height="40" FontSize="14" Style="{StaticResource MaterialDesignMenuCustom}"
+                                   VerticalAlignment="Top" DockPanel.Dock="Top" 
+                  materialDesign:MenuAssist.TopLevelMenuItemHeight="24" localStyleTest:MyMarginCustom.MyMargin="0 0 0 0"
+                  >
+                <localStyle:CustomMenuItem Header="_File" materialDesign:MenuAssist.MenuItemsPresenterMargin="0 3 0 0" >
+                    <localStyle:CustomMenuItem  x:Name="AppSave" Header="_Save" HorizontalAlignment="Left" Width="140" Click="AppSave_Click"  />
+                    <localStyle:CustomMenuItem x:Name="AppHide" Header="_Hide" HorizontalAlignment="Left" Width="140" Click="AppHide_Click" />
 
-                    <MenuItem x:Name="AppExit" Header="E_xit" HorizontalAlignment="Left" Width="140" Click="AppExit_Click" />
-                </MenuItem>
+                    <localStyle:CustomMenuItem x:Name="AppExit" Header="E_xit" HorizontalAlignment="Left" Width="140" Click="AppExit_Click" />
+                </localStyle:CustomMenuItem>
 
-                <MenuItem Header="_Help" >
-                    <MenuItem x:Name="About" Header="About" HorizontalAlignment="Left" Width="140" Click="AppAbout_Click" />
-                </MenuItem>
-            </Menu>
+                <localStyle:CustomMenuItem Header="_Help" materialDesign:MenuAssist.MenuItemsPresenterMargin="0 3 0 0" >
+                    <localStyle:CustomMenuItem x:Name="About" Header="About" HorizontalAlignment="Left" Width="140" Click="AppAbout_Click" />
+                </localStyle:CustomMenuItem>
+            </localStyle:CustomMenu>
         <tb:TaskbarIcon x:Name="tbi" 
                      ToolTipText="Refresh Rate" TrayLeftMouseDown="tbi_TrayLeftMouseDown" TrayRightMouseDown="tbi_TrayRightMouseDown">
             <tb:TaskbarIcon.ContextMenu>
@@ -46,7 +51,6 @@
                 <StackPanel Margin="20 0 5 5">
 
                     <StackPanel x:Name="StackPanelAll">
-
                         <GroupBox Header="Settings" FontSize="14" Margin="0 10 0 0">
                             <StackPanel Orientation="Vertical" Margin="10">
                                 <StackPanel Orientation="Horizontal">

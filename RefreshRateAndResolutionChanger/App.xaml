@@ -13,7 +13,8 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.DeepPurple.xaml" />
                 <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor2.Lime.xaml" />-->
 
-                <ResourceDictionary Source="/Resources/Styles/MaterialDesignMenuStyleModified.xaml" />
+                <ResourceDictionary Source="/Resources/Styles/MaterialDesignMenuCustomStyleModified.xaml" />
+                <ResourceDictionary Source="/Resources/Styles/Test/MyTestCustomControl2.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
            

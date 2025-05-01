@@ -1,8 +1,10 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     
-                                 xmlns:converters="clr-namespace:MaterialDesignThemes.Wpf.Converters;assembly=MaterialDesignThemes.Wpf"
-xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
+                        xmlns:converters="clr-namespace:MaterialDesignThemes.Wpf.Converters;assembly=MaterialDesignThemes.Wpf"
+                xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
+                    xmlns:local="clr-namespace:RefreshRateAndResolutionChanger.Resources.Styles"
+                   
                     >
 
 
@@ -24,9 +26,13 @@ xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.
         </Setter>
     </Style>
 
-    <Style x:Key="MaterialDesignMenuItem"
-TargetType="{x:Type MenuItem}"
+    <!--<Style x:Key="MaterialDesignMenuItem"
+TargetType="{x:Type local:CustomMenuItem}"
+BasedOn="{x:Null}">-->
+    <Style x:Key="MaterialDesignMenuItemCustom"
+TargetType="{x:Type local:CustomMenuItem}"
 BasedOn="{x:Null}">
+        <Setter Property="SubmenuItemHeight" Value="24" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Padding" Value="24,0,24,0" />
@@ -162,8 +168,8 @@ BasedOn="{x:Null}">
                          Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer, TypeInTargetAssembly={x:Type FrameworkElement}}}"
                          wpf:ScrollViewerAssist.IgnorePadding="{Binding Path=(wpf:ScrollViewerAssist.IgnorePadding), RelativeSource={RelativeSource TemplatedParent}}"
                          wpf:ScrollViewerAssist.PaddingMode="{Binding Path=(wpf:ScrollViewerAssist.PaddingMode), RelativeSource={RelativeSource TemplatedParent}}">
-                                            <!--<Grid Margin="{Binding RelativeSource={RelativeSource Mode=Self}, Path=(wpf:MenuAssist.MenuItemsPresenterMargin)}" RenderOptions.ClearTypeHint="Enabled">-->
-                                            <Grid Margin="0 3 0 3" RenderOptions.ClearTypeHint="Enabled">
+                                            <Grid Margin="{Binding RelativeSource={RelativeSource Mode=Self}, Path=(wpf:MenuAssist.MenuItemsPresenterMargin)}" RenderOptions.ClearTypeHint="Enabled">
+                                            <!--<Grid Margin="0 3 0 3" RenderOptions.ClearTypeHint="Enabled">-->
                                                 <Canvas Width="0"
                        Height="0"
                        HorizontalAlignment="Left"
@@ -195,7 +201,9 @@ BasedOn="{x:Null}">
                             <Setter TargetName="SubBlock" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="Role" Value="SubmenuItem">
-                            <Setter Property="Height" Value="24" />
+                            <!--<Setter Property="Height" Value="24" />-->
+                            <Setter Property="Height" Value="{Binding SubmenuItemHeight, RelativeSource={RelativeSource Self}}" />
+                            <Setter Property="Height" Value="{Binding SubmenuItemHeight, RelativeSource={RelativeSource AncestorType={x:Type Menu}}}" />
                             <!--<Setter Property="Height" Value="32" />-->
                             <Setter TargetName="BoldHeaderPresenter" Property="Visibility" Value="Collapsed" />
                             <Setter TargetName="InputGestureTextWrapper" Property="Visibility" Value="Visible" />
@@ -257,17 +265,18 @@ BasedOn="{x:Null}">
         </Setter>
     </Style>
 
-    <Style x:Key="MaterialDesignMenu" TargetType="{x:Type MenuBase}">
+    <Style x:Key="MaterialDesignMenuCustom" TargetType="{x:Type local:CustomMenu}">
         <Style.Resources>
-            <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}" />
+            <Style TargetType="local:CustomMenuItem" BasedOn="{StaticResource MaterialDesignMenuItemCustom}" />
         </Style.Resources>
 
+        <Setter Property="SubmenuItemHeight" Value="24" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="FontFamily" Value="{StaticResource MaterialDesignFont}" />
         <Setter Property="Foreground" Value="{DynamicResource MaterialDesign.Brush.Foreground}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type MenuBase}">
+                <ControlTemplate TargetType="{x:Type local:CustomMenu}">
                     <Border Padding="{TemplateBinding Padding}"
          Background="{TemplateBinding Background}"
          BorderBrush="{TemplateBinding BorderBrush}"
@@ -281,17 +290,17 @@ BasedOn="{x:Null}">
         <Setter Property="TextBlock.FontSize" Value="15" />
         <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="wpf:MenuAssist.TopLevelMenuItemHeight" Value="24" />
-        <!--<Setter Property="wpf:MenuAssist.TopLevelMenuItemHeight" Value="48" />-->
+        <!--<Setter Property="wpf:MenuAssist.TopLevelMenuItemHeight" Value="24" />-->
+        <Setter Property="wpf:MenuAssist.TopLevelMenuItemHeight" Value="48" />
     </Style>
 
     <Style x:Key="MaterialDesignContextMenu"
 TargetType="{x:Type ContextMenu}"
-BasedOn="{StaticResource MaterialDesignMenu}">
+BasedOn="{StaticResource MaterialDesignMenuCustom}">
         <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.Background}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type MenuBase}">
+                <ControlTemplate TargetType="{x:Type local:CustomMenu}">
                     <AdornerDecorator CacheMode="{Binding RelativeSource={RelativeSource Self}, Path=(wpf:ShadowAssist.CacheMode)}">
                         <Grid>
                             <Border Margin="3"
@@ -322,21 +331,21 @@ BasedOn="{StaticResource MaterialDesignMenu}">
 
 
     <Style x:Key="{x:Static wpf:Spelling.SuggestionMenuItemStyleKey}"
-TargetType="{x:Type MenuItem}"
-BasedOn="{StaticResource MaterialDesignMenuItem}">
+TargetType="{x:Type local:CustomMenuItem}"
+BasedOn="{StaticResource MaterialDesignMenuItemCustom}">
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Header" Value="{Binding RelativeSource={RelativeSource Self}, Path=CommandParameter}" />
     </Style>
 
     <Style x:Key="{x:Static wpf:Spelling.IgnoreAllMenuItemStyleKey}"
-TargetType="{x:Type MenuItem}"
-BasedOn="{StaticResource MaterialDesignMenuItem}">
+TargetType="{x:Type local:CustomMenuItem}"
+BasedOn="{StaticResource MaterialDesignMenuItemCustom}">
         <Setter Property="Header" Value="Ignore All" />
     </Style>
 
     <Style x:Key="{x:Static wpf:Spelling.NoSuggestionsMenuItemStyleKey}"
-TargetType="{x:Type MenuItem}"
-BasedOn="{StaticResource MaterialDesignMenuItem}">
+TargetType="{x:Type local:CustomMenuItem}"
+BasedOn="{StaticResource MaterialDesignMenuItemCustom}">
         <Setter Property="Header" Value="(no spelling suggestions)" />
         <Setter Property="IsEnabled" Value="False" />
     </Style>
