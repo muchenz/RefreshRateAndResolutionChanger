@@ -529,7 +529,7 @@ namespace RefreshRateWpfApp
 
         void Save()
         {
-            List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString() };
+            List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString(),  "<RES>" };
 
             //listToSave.Add(this.textBlockActualRefreshRate.Text.Split('@')[0]);
 
@@ -564,6 +564,12 @@ namespace RefreshRateWpfApp
                     line = file.ReadLine();
                     TestTime = int.Parse(line);
 
+                    while (line != "<RES>")
+                    {
+                        line = file.ReadLine();
+                        if (line == null) 
+                            return;
+                    }
                     //line = file.ReadLine();
                     //if (line == GetActualResolutionAndRefresRategString().Split('@')[0])
                     PosiibleRefreshrateList.Clear();
