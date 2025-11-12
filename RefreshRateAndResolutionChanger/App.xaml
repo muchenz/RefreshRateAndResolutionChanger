@@ -15,6 +15,7 @@
 
                 <ResourceDictionary Source="/Resources/Styles/MaterialDesignMenuCustomStyleModified.xaml" />
                 <ResourceDictionary Source="/Resources/Styles/Test/MyTestCustomControl2.xaml" />
+                <ResourceDictionary Source="/Resources/Styles/NewGroupBoxStyleCustom.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
            
