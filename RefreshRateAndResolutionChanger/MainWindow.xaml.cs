@@ -493,12 +493,15 @@ namespace RefreshRateWpfApp
 
         private void Button_Click_Save(object sender, RoutedEventArgs e)
         {
-            SetTray();
-            Save();
-            DirtySetting = false;
+           SaveAction();
         }
 
-
+        void SaveAction()
+        {
+            SetTray();
+            SaveToFile();
+            DirtySetting = false;
+        }
         void SetTray()
         {
 
@@ -527,7 +530,7 @@ namespace RefreshRateWpfApp
         }
 
 
-        void Save()
+        void SaveToFile()
         {
             List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString(),  "<RES>" };
 
@@ -704,7 +707,7 @@ namespace RefreshRateWpfApp
 
         private void AppSave_Click(object sender, RoutedEventArgs e)
         {
-            Save();
+            SaveAction();
         }
 
         private void AppExit_Click(object sender, RoutedEventArgs e)
