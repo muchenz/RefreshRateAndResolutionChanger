@@ -123,7 +123,7 @@
                 </Popup>
                 <StackPanel Grid.Row="4" Orientation="Horizontal">
                     <!--<Button Click="Button_Click_Refresh" Margin="5">Refresh</Button>-->
-                    <Button Click="Button_Click_Choose" Margin="75, 20,0,0" Padding="10,5,10,5" IsEnabled="{Binding DirtySetting}">Save to File and Tray</Button>
+                    <Button Click="Button_Click_Save" Margin="75, 20,0,0" Padding="10,5,10,5" IsEnabled="{Binding DirtySetting}">Save to File and Tray</Button>
                 </StackPanel>
             </Grid>
         </DockPanel>

@@ -491,7 +491,7 @@ namespace RefreshRateWpfApp
             Refresh_RefreshText();
         }
 
-        private void Button_Click_Choose(object sender, RoutedEventArgs e)
+        private void Button_Click_Save(object sender, RoutedEventArgs e)
         {
             SetTray();
             Save();
