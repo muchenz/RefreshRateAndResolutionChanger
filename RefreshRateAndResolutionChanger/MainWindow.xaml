@@ -8,7 +8,7 @@
         xmlns:localStyleTest="clr-namespace:RefreshRateAndResolutionChanger.Resources.Styles.Test"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Refresh Rate App" Height="850" Width="400" FontSize="18"
+        Title="Refresh Rate App" Height="768" Width="400" FontSize="18"
         xmlns:tb="http://www.hardcodet.net/taskbar"        
         Closing="OnClose" 
         StateChanged="Window_StateChanged"
@@ -62,22 +62,22 @@
                             <TextBlock Text="{Binding}"  VerticalAlignment="Bottom"/>
                         </DataTemplate>
                     </GroupBox.HeaderTemplate>
-                    <StackPanel Orientation="Vertical" Margin="10">
+                    <StackPanel Orientation="Vertical" Margin="10 3 10 3">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton x:Name="RadioButtinAllResMode" IsChecked="{Binding AllResolutionMode}" GroupName="Mode"/>
-                            <TextBlock Margin="10,-4,0,0" Text="All Resolution Mode" ></TextBlock>
+                            <TextBlock Margin="10,-1,0,0" Text="All Resolution Mode" ></TextBlock>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <RadioButton x:Name="RadioButtinAcualResMode" GroupName="Mode"/>
-                            <TextBlock Margin="10,-4,0,0" Text="Actual Only Resolution Mode"></TextBlock>
+                            <TextBlock Margin="10,-1,0,0" Text="Actual Only Resolution Mode"></TextBlock>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <CheckBox IsChecked="{Binding RunAsMinimalized}" />
-                            <TextBlock Margin="10,-4,0,0" Text="Run as minimalized"></TextBlock>
+                            <TextBlock Margin="10,-1,0,0" Text="Run as minimalized"></TextBlock>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <CheckBox IsChecked="{Binding RunStartup}" />
-                            <TextBlock Margin="10,-4,0,0" Text="Run at Windows startup"></TextBlock>
+                            <TextBlock Margin="10,-1,0,0" Text="Run at Windows startup"></TextBlock>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
