@@ -248,8 +248,9 @@ namespace RefreshRateWpfApp
                         Width = devMode.dmPelsWidth
                     };
 
-                    if (actualResolitionandRefresh.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
-                    {
+                    //probably to remove this if statement (this cause lost choosed item when resolution changes)
+                    //if (actualResolitionandRefresh.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
+                    //{
 
                         var item = PosiibleRefreshrateList.Where(a => a.RefreshRate == devMode.dmDisplayFrequency
                         && a.Width == devMode.dmPelsWidth && a.Height == devMode.dmPelsHeight).FirstOrDefault();
@@ -257,7 +258,7 @@ namespace RefreshRateWpfApp
                         {
                             t.Choosed = true;
                         }
-                    }
+                    //}
 
                     temPList.Add(t);
                 }
