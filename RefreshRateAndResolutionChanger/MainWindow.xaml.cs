@@ -293,17 +293,24 @@ namespace RefreshRateWpfApp
                 }
             }
 
-            var groups = temPList.GroupBy(a => a.ResolutionName);
-
             var newList = new List<RefreshDataModel>();
+            
+            var eualityComparer = new RefreshDataModelEqualityComparer();
+            var chosen = PosiibleRefreshrateList.Where(a => a.Choosed).ToList();
 
-            foreach (var item in groups)
-            {
-                var reff = item.GroupBy(a => a.RefreshRate).Select(a => a.First()).ToList();
-                //var reff = item.GroupBy(a => a.RefreshRate).SelectMany(a => a).ToList();
-                reff.ForEach(a => newList.Add(a));
-            }
-            newList.AddRange(PosiibleRefreshrateList.Where(a => a.Choosed));
+            //-------
+            //newList.AddRange(temPList);                        
+            //newList = newList.Distinct(eualityComparer).ToList();
+
+            //newList.RemoveAll(a=> chosen.Any(b=> eualityComparer.Equals(a, b) ) );
+            //newList.AddRange(chosen);
+            //-----
+
+            newList = chosen
+                .Concat(temPList)
+                .Distinct(eualityComparer)
+                .ToList();
+
 
             PosiibleRefreshrateList.Clear();
             newList.Sort(new RefreshDataModelComparer());
@@ -829,5 +836,34 @@ namespace RefreshRateWpfApp
 
         public bool Choosed { get; set; }
 
+    }
+
+    public class RefreshDataModelEqualityComparer : IEqualityComparer<RefreshDataModel>
+    {
+        public bool Equals(RefreshDataModel x, RefreshDataModel y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (x is null || y is null) return false;
+
+            return x.Width == y.Width &&
+                   x.Height == y.Height &&
+                   x.RefreshRate == y.RefreshRate &&
+                   x.Monitor == y.Monitor;
+        }
+
+        public int GetHashCode(RefreshDataModel obj)
+        {
+            if (obj == null) return 0;
+
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + obj.Width.GetHashCode();
+                hash = hash * 23 + obj.Height.GetHashCode();
+                hash = hash * 23 + obj.RefreshRate.GetHashCode();
+                hash = hash * 23 + (obj.Monitor?.GetHashCode() ?? 0);
+                return hash;
+            }
+        }
     }
 }
