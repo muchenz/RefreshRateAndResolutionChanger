@@ -814,11 +814,12 @@ namespace RefreshRateWpfApp
         {
             if (x.Width - y.Width != 0)
                 return (int)(x.Width - y.Width);
-            else
-            if (x.Height - y.Height != 0)
+            else if (x.Height - y.Height != 0)
                 return (int)(x.Height - y.Height);
+            else if (x.RefreshRate - y.RefreshRate != 0)
+                return (int)(x.RefreshRate - y.RefreshRate);
 
-            return (int)(x.RefreshRate - y.RefreshRate);
+            return string.Compare(y.Monitor, x.Monitor, StringComparison.Ordinal);
         }
     }
 
