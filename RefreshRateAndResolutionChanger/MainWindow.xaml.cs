@@ -245,19 +245,20 @@ namespace RefreshRateWpfApp
                         RefreshRate = devMode.dmDisplayFrequency
                     ,
                         Height = devMode.dmPelsHeight,
-                        Width = devMode.dmPelsWidth
+                        Width = devMode.dmPelsWidth,
+                        Monitor = monitorInfo.szDevice
                     };
 
                     //probably to remove this if statement (this cause lost choosed item when resolution changes)
                     //if (actualResolitionandRefresh.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
                     //{
 
-                        var item = PosiibleRefreshrateList.Where(a => a.RefreshRate == devMode.dmDisplayFrequency
-                        && a.Width == devMode.dmPelsWidth && a.Height == devMode.dmPelsHeight).FirstOrDefault();
-                        if (item != null && item.Choosed)
-                        {
-                            t.Choosed = true;
-                        }
+                    var item = PosiibleRefreshrateList.Where(a => a.RefreshRate == devMode.dmDisplayFrequency
+                    && a.Width == devMode.dmPelsWidth && a.Height == devMode.dmPelsHeight).FirstOrDefault();
+                    if (item != null && item.Choosed)
+                    {
+                        t.Choosed = true;
+                    }
                     //}
 
                     temPList.Add(t);
@@ -331,8 +332,10 @@ namespace RefreshRateWpfApp
             //devMode.dmFields = 0x00400000;
             devMode.dmFields = 0x00080000 | 0x00100000 | 0x00400000;
             //ChangeDisplaySettingsW(ref devMode, 0);
-            ChangeDisplaySettingsW(ref devMode, 0);
+            //ChangeDisplaySettingsW(ref devMode, 0);
+            ChangeDisplaySettingsExW(monitorInfo.szDevice, ref devMode, IntPtr.Zero, 0, IntPtr.Zero);
 
+            // szDevice id string eg "\\\\.\\DISPLAY2" for secod monitor
 
             // Done!
             return string.Format("{0} x {1} @ {2}Hz", devMode.dmPelsWidth, devMode.dmPelsHeight, devMode.dmDisplayFrequency);
@@ -344,6 +347,14 @@ namespace RefreshRateWpfApp
         [DllImport("user32.dll", SetLastError = false)]
         private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int ChangeDisplaySettingsExW(
+            string lpszDeviceName,
+            ref DEVMODEW lpDevMode,
+            IntPtr hwnd,
+            int dwflags,
+            IntPtr lParam
+        );
 
         [DllImport("User32.dll")]
         [return: MarshalAs(UnmanagedType.I4)]
@@ -494,7 +505,7 @@ namespace RefreshRateWpfApp
 
         private void Button_Click_Save(object sender, RoutedEventArgs e)
         {
-           SaveAction();
+            SaveAction();
         }
 
         void SaveAction()
@@ -533,11 +544,11 @@ namespace RefreshRateWpfApp
 
         void SaveToFile()
         {
-            List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString(),  "<RES>" };
+            List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString(), "<RES>" };
 
             //listToSave.Add(this.textBlockActualRefreshRate.Text.Split('@')[0]);
 
-            PosiibleRefreshrateList.Where(a => a.Choosed).Select(a => a.FullName.ToString()).ToList().ForEach(a => listToSave.Add(a));
+            PosiibleRefreshrateList.Where(a => a.Choosed).Select(a => a.FullNameWithMonitor.ToString()).ToList().ForEach(a => listToSave.Add(a));
 
             // using (var file = new StreamWriter("RefreshRate.cfg"))
             var path = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "RefreshRate.cfg");
@@ -571,7 +582,7 @@ namespace RefreshRateWpfApp
                     while (line != "<RES>")
                     {
                         line = file.ReadLine();
-                        if (line == null) 
+                        if (line == null)
                             return;
                     }
                     //line = file.ReadLine();
@@ -581,19 +592,20 @@ namespace RefreshRateWpfApp
                     while (!file.EndOfStream)
                     {
                         line = file.ReadLine();
-                        var (Width, Height, Refresh) = GetResAndFreqFromString(line);
+                        var (Width, Height, Refresh, Monitor) = GetResAndFreqAndMonitorFromString(line);
 
                         PosiibleRefreshrateList.Add(new RefreshDataModel
                         {
                             RefreshRate = Refresh,
                             Height = Height,
                             Width = Width,
+                            Monitor = Monitor,
                             Choosed = true
                         });
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
 
             }
@@ -609,32 +621,32 @@ namespace RefreshRateWpfApp
             SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRategString());
 
             StackPanelAll.IsEnabled = false;
-            
+
             //////////////////////
 
             // get dpi
             var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
             var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
-    
+
             // get screen size
             var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
             var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
-           
-         
+
+
             var popupWidth = Popup.ActualWidth;
             var popupHeight = Popup.ActualHeight;
 
-            var scaledWidth = popupWidth/ dpiScaleX;
+            var scaledWidth = popupWidth / dpiScaleX;
             var scaledHeight = popupHeight / dpiScaleY;
 
-            var offsetX = (screenWidth- popupWidth) / 2;
+            var offsetX = (screenWidth - popupWidth) / 2;
             var offsetY = (screenHeight - popupHeight) / 2;
 
 
             Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
             Popup.HorizontalOffset = offsetX;
             Popup.VerticalOffset = offsetY;
-    
+
             //////////////////////////////////
 
 
@@ -706,6 +718,24 @@ namespace RefreshRateWpfApp
 
         }
 
+        private (uint Width, uint Height, uint Refresh, string Monitor) GetResAndFreqAndMonitorFromString(string data)
+        {
+
+            var split1 = data.Split('@');
+
+            var monitor = split1[2].Trim();
+            var refS = split1[1].Substring(0, split1[1].Length - 3).Trim();
+
+            var refU = uint.Parse(refS);
+
+            var heightU = uint.Parse(split1[0].Split('x')[1].Trim());
+            var widthU = uint.Parse(split1[0].Split('x')[0].Trim());
+
+
+            return (widthU, heightU, refU, monitor);
+
+        }
+
         private void AppSave_Click(object sender, RoutedEventArgs e)
         {
             SaveAction();
@@ -756,8 +786,10 @@ namespace RefreshRateWpfApp
     {
         public uint Width { get; set; }
         public uint Height { get; set; }
+        public string Monitor { get; set; }
         public string ResolutionName => $"{Width} x {Height}";
         public string FullName => $"{Width} x {Height} @ {RefreshRate} Hz";
+        public string FullNameWithMonitor => $"{Width} x {Height} @ {RefreshRate} Hz @ {Monitor}";
         public uint RefreshRate { get; set; }
         public string RefreshRateName => RefreshRate + " Hz";
 
