@@ -292,19 +292,18 @@ namespace RefreshRateWpfApp
                     temPList.Add(t);
                 }
             }
-            temPList.AddRange(PosiibleRefreshrateList.Where(a => a.Choosed));
 
-            var bb = PosiibleRefreshrateList.Where(a => a.Choosed);
             var groups = temPList.GroupBy(a => a.ResolutionName);
 
             var newList = new List<RefreshDataModel>();
 
             foreach (var item in groups)
             {
-                //var reff = item.GroupBy(a => a.RefreshRate).Select(a => a.First()).ToList();
-                var reff = item.GroupBy(a => a.RefreshRate).SelectMany(a => a).ToList();
+                var reff = item.GroupBy(a => a.RefreshRate).Select(a => a.First()).ToList();
+                //var reff = item.GroupBy(a => a.RefreshRate).SelectMany(a => a).ToList();
                 reff.ForEach(a => newList.Add(a));
             }
+            newList.AddRange(PosiibleRefreshrateList.Where(a => a.Choosed));
 
             PosiibleRefreshrateList.Clear();
             newList.Sort(new RefreshDataModelComparer());
