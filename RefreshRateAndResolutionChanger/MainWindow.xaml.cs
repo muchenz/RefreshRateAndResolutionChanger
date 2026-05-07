@@ -260,7 +260,7 @@ namespace RefreshRateWpfApp
                 RefreshRate = devMode.dmDisplayFrequency,
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
-                Monitor = monitorInfo.szDevice
+                Monitor = monitor
             };
 
             // Done!
