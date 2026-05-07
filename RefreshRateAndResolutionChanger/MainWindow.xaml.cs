@@ -154,16 +154,16 @@ namespace RefreshRateWpfApp
         private unsafe void OnTimerTick(object sender, object e)
         {
 
-            var RefreshRate = GetActualResolutionAndRefresRategString();
+            var actualSetting = GetActualResolutionAndRefresRate();
 
-            if (RefreshRate.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
+            if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
             {
-                SetLabelRefreshRateAndHeader(RefreshRate);
+                SetLabelRefreshRateAndHeader(actualSetting);
             }
             else
             {
                 SetPossibleRefreshRate(AllResolutionMode);
-                SetLabelRefreshRateAndHeader(RefreshRate);
+                SetLabelRefreshRateAndHeader(actualSetting);
             }
         }
 
@@ -209,7 +209,7 @@ namespace RefreshRateWpfApp
         }
 
 
-        private string GetActualResolutionAndRefresRategString()
+        private RefreshDataModel GetActualResolutionAndRefresRate()
         {
             SetDEVMODEW_and_MONITORINFOEXW();
 
@@ -219,8 +219,16 @@ namespace RefreshRateWpfApp
                 throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
             }
 
+            var currentSetting = new RefreshDataModel
+            {
+                RefreshRate = devMode.dmDisplayFrequency,
+                Height = devMode.dmPelsHeight,
+                Width = devMode.dmPelsWidth,
+                Monitor = monitorInfo.szDevice
+            };
+
             // Done!
-            return string.Format("{0} x {1} @ {2}Hz", devMode.dmPelsWidth, devMode.dmPelsHeight, devMode.dmDisplayFrequency);
+            return currentSetting;
         }
 
 
@@ -539,7 +547,8 @@ namespace RefreshRateWpfApp
 
         void Refresh_RefreshText()
         {
-            this.textBlockActualRefreshRate.Text = GetActualResolutionAndRefresRategString();
+            var actualSetting = GetActualResolutionAndRefresRate();
+            this.textBlockActualRefreshRate.Text = actualSetting.FullName;
             header.Header = this.textBlockActualRefreshRate.Text;
             SetPossibleRefreshRate(AllResolutionMode);
         }
@@ -575,11 +584,11 @@ namespace RefreshRateWpfApp
                 {
                     var menuItem = new MenuItem();
                     menuItem.Header = item.FullName;
-                    menuItem.Tag = item.Monitor;
+                    menuItem.Tag = item;
                     menuItem.Click += (a, b) =>
                     {
                         //SetFrequerency(uint.Parse(((MenuItem)a).Tag.ToString()));
-                        SetResolutionAndFrequerency(((MenuItem)a).Header.ToString() + " @ " + ((MenuItem)a).Tag.ToString());
+                        SetResolutionAndFrequerency(((MenuItem)a).Header.ToString() + " @ " + ((RefreshDataModel)((MenuItem)a).Tag).Monitor.ToString());
 
                     };
                     ContextMenu.Items.Add(menuItem);
@@ -771,36 +780,23 @@ namespace RefreshRateWpfApp
 
             SetResolutionAndFrequerency(actualRefreshAndResolution);
 
-            SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRategString());
+            SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRate());
             Popup.IsOpen = false;
         }
 
-        void SetLabelRefreshRateAndHeader(string name)
+        void SetLabelRefreshRateAndHeader(RefreshDataModel data)
         {
-            this.textBlockActualRefreshRate.Text = name;
+            this.textBlockActualRefreshRate.Text = data.FullName;
             header.Header = this.textBlockActualRefreshRate.Text;
             header.IsEnabled = false;
         }
 
         void SetActalRefreshRateAndHeaderLabel()
         {
-            var RefreshRate = GetActualResolutionAndRefresRategString();
+            var RefreshRate = GetActualResolutionAndRefresRate();
 
             SetLabelRefreshRateAndHeader(RefreshRate);
         }
-
-        private uint GetActualRefreshRate()
-        {
-            var refS = GetActualResolutionAndRefresRategString();
-
-            refS = refS.Split('@')[1].Trim();
-
-            refS = refS.Substring(0, refS.Length - 2);
-
-            return uint.Parse(refS);
-
-        }
-
 
         //eg. 1920 x 1600 @ 60Hz"
         private (uint Width, uint Height, uint Refresh) GetResAndFreqFromString(string data)
@@ -893,7 +889,7 @@ namespace RefreshRateWpfApp
         public string ResolutionName => $"{Width} x {Height}";
         public string FullName => $"{Width} x {Height} @ {RefreshRate} Hz";
         public string FullNameWithMonitor => $"{Width} x {Height} @ {RefreshRate} Hz @ {Monitor}";
-        public string FullNameWithMonitorForDispay => $"{Width} x {Height} @ {RefreshRate} Hz @ {Monitor}";
+        public string FullNameWithMonitorForDisplay => $"{Width} x {Height} @ {RefreshRate} Hz {Monitor.Last()}";
         public uint RefreshRate { get; set; }
         public string RefreshRateName => RefreshRate + " Hz";
 
