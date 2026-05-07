@@ -246,7 +246,7 @@ namespace RefreshRateWpfApp
             return string.Format("{0} x {1} @ {2}Hz @ {3}", devMode.dmPelsWidth, devMode.dmPelsHeight, devMode.dmDisplayFrequency, monitorInfo.szDevice);
         }
 
-        private RefreshDataModel GetActualResolutionAndRefresRateFrommonitorg(string monitor)
+        private RefreshDataModel GetActualResolutionAndRefresRateFromMonitorg(string monitor)
         {
 
             bool bResult = EnumDisplaySettingsW(monitor, ENUM_CURRENT_SETTINGS, out devMode);
@@ -381,7 +381,7 @@ namespace RefreshRateWpfApp
 
             SetDEVMODEW_and_MONITORINFOEXW();
 
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out devMode);
+            bool bResult = EnumDisplaySettingsW(settingsToSet.Monitor, ENUM_CURRENT_SETTINGS, out devMode);
             if (!bResult)
             {
                 throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
@@ -690,11 +690,11 @@ namespace RefreshRateWpfApp
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
             var resSettings = (RefreshDataModel)((Button)sender).DataContext;
-            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFrommonitorg(resSettings.Monitor);
+            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor);
 
 
             SetResolutionAndFrequerency(resSettings);
-            var splitInfo = GetActualResolutionAndRefresRateFrommonitorg(resSettings.Monitor).FullNameWithMonitor.Split('@');
+            var splitInfo = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor).FullNameWithMonitor.Split('@');
 
             var infoString = splitInfo[0] +" @ " +splitInfo[1] + " " +splitInfo[2].Last();
             
