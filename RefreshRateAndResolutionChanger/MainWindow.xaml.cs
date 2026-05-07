@@ -167,6 +167,16 @@ namespace RefreshRateWpfApp
             }
         }
 
+        [DllImport("user32.dll")]
+        static extern bool EnumDisplayMonitors(
+                IntPtr hdc,
+                IntPtr lprcClip,
+                MonitorEnumProc lpfnEnum,
+                IntPtr dwData);
+
+        delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
+
+
         MONITORINFOEXW monitorInfo;
         DEVMODEW devMode;
         void SetDEVMODEW_and_MONITORINFOEXW()
@@ -186,7 +196,7 @@ namespace RefreshRateWpfApp
             // 3. Get more information about the monitor.
             monitorInfo = new MONITORINFOEXW();
             monitorInfo.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
-
+           
             bool bResult = GetMonitorInfoW(hmonitor, ref monitorInfo);
             if (!bResult)
             {
@@ -647,7 +657,19 @@ namespace RefreshRateWpfApp
 
             }
         }
+        [DllImport("Shcore.dll")]
+        static extern int GetDpiForMonitor(
+    IntPtr hmonitor,
+    MonitorDpiType dpiType,
+    out uint dpiX,
+    out uint dpiY);
 
+        enum MonitorDpiType
+        {
+            MDT_EFFECTIVE_DPI = 0,
+            MDT_ANGULAR_DPI = 1,
+            MDT_RAW_DPI = 2
+        }
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
             var data = (RefreshDataModel)((Button)sender).DataContext;
@@ -665,17 +687,54 @@ namespace RefreshRateWpfApp
 
             //////////////////////
 
+            var monitors = new List<(IntPtr handle, MONITORINFOEXW info)>();
+
+            bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
+            {
+                var info = new MONITORINFOEXW();
+                info.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
+
+                GetMonitorInfoW(hMonitor, ref info);
+
+                monitors.Add((hMonitor, info));
+                return true;
+            }
+
+
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
+
+            // znajdź DISPLAY
+            var target = monitors.First(m => m.info.szDevice == data.Monitor);
+
+            IntPtr hmonitor = target.handle;
+
+            var rectMon = target.info.rcMonitor;
+
+            var width = rectMon.right - rectMon.left;
+            var height = rectMon.bottom - rectMon.top;
+
+            uint dpiX, dpiY;
+            GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
+
+            var dpiScaleX = dpiX / 96.0;
+            var dpiScaleY = dpiY / 96.0;
+
+            /////////////////
             // get dpi
-            var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
-            var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
+            //var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            //var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
 
             // get screen size
-            var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
-            var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
+
+            var screenWidth = width/dpiScaleX;
+            var screenHeight = height/dpiScaleY;
+
+            //var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
+            //var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
 
 
-            var popupWidth = Popup.ActualWidth;
-            var popupHeight = Popup.ActualHeight;
+            var popupWidth = Popup.Width;
+            var popupHeight = Popup.Height;
 
             var scaledWidth = popupWidth / dpiScaleX;
             var scaledHeight = popupHeight / dpiScaleY;
@@ -684,9 +743,11 @@ namespace RefreshRateWpfApp
             var offsetY = (screenHeight - popupHeight) / 2;
 
 
-            Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint;
-            Popup.HorizontalOffset = offsetX;
-            Popup.VerticalOffset = offsetY;
+            Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
+            //Popup.HorizontalOffset = offsetX;
+            //Popup.VerticalOffset = offsetY;
+            Popup.HorizontalOffset = rectMon.left/dpiScaleX+offsetX;
+            Popup.VerticalOffset = rectMon.top/dpiScaleY +offsetY;
 
             //////////////////////////////////
 
@@ -832,6 +893,7 @@ namespace RefreshRateWpfApp
         public string ResolutionName => $"{Width} x {Height}";
         public string FullName => $"{Width} x {Height} @ {RefreshRate} Hz";
         public string FullNameWithMonitor => $"{Width} x {Height} @ {RefreshRate} Hz @ {Monitor}";
+        public string FullNameWithMonitorForDispay => $"{Width} x {Height} @ {RefreshRate} Hz @ {Monitor}";
         public uint RefreshRate { get; set; }
         public string RefreshRateName => RefreshRate + " Hz";
 
