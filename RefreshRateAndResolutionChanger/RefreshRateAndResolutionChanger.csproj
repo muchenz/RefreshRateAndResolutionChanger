@@ -118,6 +118,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource1.resx</DependentUpon>
     </Compile>
+    <Compile Include="Resources\BoolToVisibilityConverter.cs" />
     <Compile Include="Resources\Styles\CustomMenu.cs" />
     <Compile Include="Resources\Styles\Test\CustomMenuItem.cs" />
     <Page Include="AboutWindow.xaml">

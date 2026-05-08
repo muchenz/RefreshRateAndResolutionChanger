@@ -95,6 +95,17 @@ namespace RefreshRateWpfApp
             }
         }
 
+        private bool _isMoreThenOneMonitor;
+        public bool IsMoreThenOneMonitor {
+         
+            get { return _isMoreThenOneMonitor; }
+            set
+            {
+                if (value == _isMoreThenOneMonitor) return;
+                _isMoreThenOneMonitor = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMoreThenOneMonitor)));
+            }
+        }
         void SetRunSatartup()
         {
             Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser
@@ -127,6 +138,7 @@ namespace RefreshRateWpfApp
             this.timer.Tick += OnTimerTick;
             this.timer.Start();
 
+            SetMonitorsList();
             LoadFromFilePosiibleRefreshrateList();
             Refresh_RefreshText();
             SetTray();
@@ -153,10 +165,11 @@ namespace RefreshRateWpfApp
 
         private unsafe void OnTimerTick(object sender, object e)
         {
-
+            SetMonitorsList();
             var actualSetting = GetActualResolutionAndRefresRate();
 
-            if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
+            if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0]
+                && actualSetting.Monitor == ((RefreshDataModel)header.Tag).Monitor)
             {
                 SetLabelRefreshRateAndHeader(actualSetting);
             }
@@ -229,21 +242,6 @@ namespace RefreshRateWpfApp
 
             // Done!
             return currentSetting;
-        }
-
-
-        private string GetActualResolutionAndRefresRateAndMonitorgString()
-        {
-            SetDEVMODEW_and_MONITORINFOEXW();
-
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out devMode);
-            if (!bResult)
-            {
-                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
-            }
-
-            // Done!
-            return string.Format("{0} x {1} @ {2}Hz @ {3}", devMode.dmPelsWidth, devMode.dmPelsHeight, devMode.dmDisplayFrequency, monitorInfo.szDevice);
         }
 
         private RefreshDataModel GetActualResolutionAndRefresRateFromMonitorg(string monitor)
@@ -355,23 +353,27 @@ namespace RefreshRateWpfApp
         public ObservableCollection<RefreshDataModel> PosiibleRefreshrateList => _posiibleRefreshrateList;
 
 
-        private int SetFrequerency(uint hertz)
-        {
-            SetDEVMODEW_and_MONITORINFOEXW();
+        List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoList = new List<(IntPtr handle, MONITORINFOEXW info)>();
 
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out devMode);
-            if (!bResult)
+        private void  SetMonitorsList()
+        {
+            monitorInfoList.Clear();
+
+            bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
             {
-                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
+                var info = new MONITORINFOEXW();
+                info.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
+
+                GetMonitorInfoW(hMonitor, ref info);
+
+                monitorInfoList.Add((hMonitor, info));
+                return true;
             }
 
-            devMode.dmDisplayFrequency = hertz;
-            devMode.dmFields = 0x00400000;
-            var res = ChangeDisplaySettingsW(ref devMode, 0);
 
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
-            // Done!
-            return res;
+            IsMoreThenOneMonitor = monitorInfoList.Count > 1;
         }
 
         private int SetResolutionAndFrequerency(RefreshDataModel settingsToSet)
@@ -553,14 +555,6 @@ namespace RefreshRateWpfApp
             Refresh_RefreshText();
         }
 
-        void Refresh_RefreshText()
-        {
-            var actualSetting = GetActualResolutionAndRefresRate();
-            this.textBlockActualRefreshRate.Text = actualSetting.FullName;
-            header.Header = this.textBlockActualRefreshRate.Text;
-            SetPossibleRefreshRate(AllResolutionMode);
-        }
-
         private void Button_Click_Refresh(object sender, RoutedEventArgs e)
         {
             //_posiibleRefreshrateList.Clear();
@@ -591,7 +585,7 @@ namespace RefreshRateWpfApp
                 if (item.Choosed)
                 {
                     var menuItem = new MenuItem();
-                    menuItem.Header = item.FullName;
+                    menuItem.Header = item.FullName + " " + item.DisplayNumber;
                     menuItem.Tag = item;
                     menuItem.Click += (a, b) =>
                     {
@@ -704,24 +698,10 @@ namespace RefreshRateWpfApp
 
             //////////////////////
 
-            var monitors = new List<(IntPtr handle, MONITORINFOEXW info)>();
-
-            bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
-            {
-                var info = new MONITORINFOEXW();
-                info.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
-
-                GetMonitorInfoW(hMonitor, ref info);
-
-                monitors.Add((hMonitor, info));
-                return true;
-            }
-
-
-            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
+            SetMonitorsList();
 
             // znajdź DISPLAY
-            var target = monitors.First(m => m.info.szDevice == resSettings.Monitor);
+            var target = monitorInfoList.First(m => m.info.szDevice == resSettings.Monitor);
 
             IntPtr hmonitor = target.handle;
 
@@ -792,11 +772,19 @@ namespace RefreshRateWpfApp
             Popup.IsOpen = false;
         }
 
+        void Refresh_RefreshText()
+        {
+            var actualSetting = GetActualResolutionAndRefresRate();
+            SetLabelRefreshRateAndHeader(actualSetting);
+            SetPossibleRefreshRate(AllResolutionMode);
+        }
+
         void SetLabelRefreshRateAndHeader(RefreshDataModel data)
         {
             this.textBlockActualRefreshRate.Text = data.FullName;
-            header.Header = this.textBlockActualRefreshRate.Text;
-            header.IsEnabled = false;
+            header.Header = this.textBlockActualRefreshRate.Text + " " +data.DisplayNumber;
+            header.Tag = data;
+            //header.IsEnabled = false;
         }
 
         void SetActalRefreshRateAndHeaderLabel()
@@ -898,6 +886,7 @@ namespace RefreshRateWpfApp
         public string FullName => $"{Width} x {Height} @ {RefreshRate} Hz";
         public string FullNameWithMonitor => $"{Width} x {Height} @ {RefreshRate} Hz @ {Monitor}";
         public string FullNameWithMonitorForDisplay => $"{Width} x {Height} @ {RefreshRate} Hz {Monitor.Last()}";
+        public string DisplayNumber => $"{Monitor.Last()}";
         public uint RefreshRate { get; set; }
         public string RefreshRateName => RefreshRate + " Hz";
 
