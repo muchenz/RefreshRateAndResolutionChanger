@@ -418,6 +418,351 @@ namespace RefreshRateWpfApp
             return res;
         }
 
+     
+
+
+        void OnClose(object sender, CancelEventArgs args)
+        {
+            tbi.Dispose();
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            switch (this.WindowState)
+            {
+                case WindowState.Minimized:
+                    Hide();
+                    timer.Stop();
+                    break;
+                default:
+                    timer.Start();
+                    break;
+            }
+        }
+
+        private void tbi_TrayLeftMouseDown(object sender, RoutedEventArgs e)
+        {
+            Refresh_RefreshText();
+            Show();
+        }
+
+        private void tbi_TrayRightMouseDown(object sender, RoutedEventArgs e)
+        {
+            Refresh_RefreshText();
+        }
+
+        private void Button_Click_Refresh(object sender, RoutedEventArgs e)
+        {
+            //_posiibleRefreshrateList.Clear();
+            Refresh_RefreshText();
+        }
+
+        private void Button_Click_Save(object sender, RoutedEventArgs e)
+        {
+            SaveAction();
+        }
+
+        void SaveAction()
+        {
+            SetTrayFromPossibleRefreshList();
+            SaveToFile();
+            DirtySetting = false;
+        }
+        void SetTrayFromPossibleRefreshList()
+        {
+            SetTryItemsFromCollection(PossibleRefreshrateList);
+        }
+
+        void RefreshTryList()
+        {
+
+            var list = new List<RefreshDataModel>();
+
+            foreach (var item in ContextMenu.Items)
+            {
+                if (item is MenuItem menuitem && menuitem?.Tag != null)
+                {
+                    list.Add((RefreshDataModel)((MenuItem)item).Tag);
+
+                }
+            }
+
+            SetTryItemsFromCollection(list);
+        }
+
+        void SetTryItemsFromCollection(ICollection<RefreshDataModel> list)
+        {
+            while (ContextMenu.Items.Count > 1)
+            {
+                ContextMenu.Items.RemoveAt(ContextMenu.Items.Count - 1);
+            }
+
+            foreach (var item in list)
+            {
+                if (item.Choosed)
+                {
+
+                    if (!MonitorInfoListString.Contains(item.Monitor))
+                    {
+                        continue;
+                    }
+
+                    var menuItem = new MenuItem();
+                    menuItem.Header = item.FullName;
+
+                    //var monitorsList = list.Select(a => a.DisplayNumber).Distinct().ToList();
+                    //var isDsplayedMonitorNumber = IsMoreThenOneMonitor || monitorsList.Count > 1 ? true : int.Parse(monitorsList.First()) > 1 ? true : false;
+
+                    menuItem.Header = item.FullName; //item.FullName
+                    menuItem.Header += IsMoreThenOneMonitor ? " Disp.: " + item.DisplayNumber : string.Empty;
+                    menuItem.Tag = item;
+                    menuItem.Click += (a, b) =>
+                    {
+                        //SetFrequerency(uint.Parse(((MenuItem)a).Tag.ToString()));
+                        SetResolutionAndFrequerency((RefreshDataModel)((MenuItem)a).Tag);
+
+                    };
+                    ContextMenu.Items.Add(menuItem);
+
+                }
+            }
+        }
+        void SaveToFile()
+        {
+            List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString(), "<RES>" };
+
+            //listToSave.Add(this.textBlockActualRefreshRate.Text.Split('@')[0]);
+
+            PossibleRefreshrateList.Where(a => a.Choosed).Select(a => a.FullNameWithMonitor.ToString()).ToList().ForEach(a => listToSave.Add(a));
+
+            // using (var file = new StreamWriter("RefreshRate.cfg"))
+            var path = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "RefreshRate.cfg");
+            using (var file = new StreamWriter(path))
+            {
+                listToSave.ForEach(a => file.WriteLine(a));
+            }
+        }
+
+        void LoadFromFilePosiibleRefreshrateList()
+        {
+            try
+            {
+                var path = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "RefreshRate.cfg");
+
+                // using (var file = new StreamReader("RefreshRate.cfg"))
+                using (var file = new StreamReader(path))
+                {
+                    var line = file.ReadLine();
+                    RunStartup = bool.Parse(line);
+
+                    line = file.ReadLine();
+                    RunAsMinimalized = bool.Parse(line);
+
+                    line = file.ReadLine();
+                    AllResolutionMode = bool.Parse(line);
+
+                    line = file.ReadLine();
+                    TestTime = int.Parse(line);
+
+                    while (line != "<RES>")
+                    {
+                        line = file.ReadLine();
+                        if (line == null)
+                            return;
+                    }
+                    //line = file.ReadLine();
+                    //if (line == GetActualResolutionAndRefresRategString().Split('@')[0])
+                    PossibleRefreshrateList.Clear();
+
+                    while (!file.EndOfStream)
+                    {
+                        line = file.ReadLine();
+                        var (Width, Height, Refresh, Monitor) = GetResAndFreqAndMonitorFromString(line);
+
+                        PossibleRefreshrateList.Add(new RefreshDataModel
+                        {
+                            RefreshRate = Refresh,
+                            Height = Height,
+                            Width = Width,
+                            Monitor = Monitor,
+                            Choosed = true
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+        
+        private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
+        {
+            var resSettings = (RefreshDataModel)((Button)sender).DataContext;
+            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor);
+
+
+            SetResolutionAndFrequerency(resSettings);
+            var splitInfo = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor).FullNameWithMonitor.Split('@');
+
+            var infoString1 = splitInfo[0] + " @ " + splitInfo[1];
+            var infoString2 = "Display: " + splitInfo[2].Last();
+
+
+            //SetLabelRefreshRateAndHeader(infoString);
+
+            StackPanelAll.IsEnabled = false;
+
+            //////////////////////
+
+            SetMonitorsList();
+
+            // znajdź DISPLAY
+            var target = monitorInfoList.First(m => m.info.szDevice == resSettings.Monitor);
+
+            IntPtr hmonitor = target.handle;
+
+            var rectMon = target.info.rcMonitor;
+
+            var width = rectMon.right - rectMon.left;
+            var height = rectMon.bottom - rectMon.top;
+
+            uint dpiX, dpiY;
+            GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
+
+            var dpiScaleX = dpiX / 96.0;
+            var dpiScaleY = dpiY / 96.0;
+
+            /////////////////
+            // get dpi
+            //var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            //var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
+
+            // get screen size
+
+            var screenWidth = width / dpiScaleX;
+            var screenHeight = height / dpiScaleY;
+
+            //var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
+            //var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
+
+
+            var popupWidth = Popup.Width;
+            var popupHeight = Popup.Height;
+
+            var scaledWidth = popupWidth / dpiScaleX;
+            var scaledHeight = popupHeight / dpiScaleY;
+
+            var offsetX = (screenWidth - popupWidth) / 2;
+            var offsetY = (screenHeight - popupHeight) / 2;
+
+
+            Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
+            //Popup.HorizontalOffset = offsetX;
+            //Popup.VerticalOffset = offsetY;
+            Popup.HorizontalOffset = rectMon.left / dpiScaleX + offsetX;
+            Popup.VerticalOffset = rectMon.top / dpiScaleY + offsetY;
+
+            //////////////////////////////////
+
+
+            Popup.IsOpen = true;
+            Popup_Label1.Content = "Test: " + infoString1;
+            Popup_Label2.Content = infoString2;
+
+            await Task.Run(async () =>
+            {
+
+                for (int i = TestTime; i > 0; i--)
+                {
+
+                    this.Dispatcher.Invoke(() => { Popup_Label_Counter.Content = i; });
+                    await Task.Delay(1000);
+                }
+
+            });
+
+            StackPanelAll.IsEnabled = true;
+
+            SetResolutionAndFrequerency(actualRefreshAndResolution);
+
+            SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRate());
+            Popup.IsOpen = false;
+        }
+       
+        void Refresh_RefreshText()
+        {
+            var actualSetting = GetActualResolutionAndRefresRate();
+            SetLabelRefreshRateAndHeader(actualSetting);
+            SetPossibleRefreshRate(AllResolutionMode);
+        }
+
+        void SetLabelRefreshRateAndHeader(RefreshDataModel data)
+        {
+            this.textBlockActualRefreshRate.Text = data.FullName;
+            header.Header = this.textBlockActualRefreshRate.Text;
+            header.Header += IsMoreThenOneMonitor ? " Disp.: " + data.DisplayNumber : string.Empty;
+            header.Tag = data;
+            //header.IsEnabled = false;
+        }
+
+        void SetActalRefreshRateAndHeaderLabel()
+        {
+            var RefreshRate = GetActualResolutionAndRefresRate();
+
+            SetLabelRefreshRateAndHeader(RefreshRate);
+        }
+
+        //eg. 1920 x 1600 @ 60Hz"
+
+        private (uint Width, uint Height, uint Refresh, string Monitor) GetResAndFreqAndMonitorFromString(string data)
+        {
+
+            var split1 = data.Split('@');
+
+            var monitor = split1[2].Trim();
+            var refS = split1[1].Substring(0, split1[1].Length - 3).Trim();
+
+            var refU = uint.Parse(refS);
+
+            var heightU = uint.Parse(split1[0].Split('x')[1].Trim());
+            var widthU = uint.Parse(split1[0].Split('x')[0].Trim());
+
+
+            return (widthU, heightU, refU, monitor);
+
+        }
+
+        private void AppSave_Click(object sender, RoutedEventArgs e)
+        {
+            SaveAction();
+        }
+
+        private void AppExit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void AppHide_Click(object sender, RoutedEventArgs e)
+        {
+            Hide();
+        }
+
+
+        private void CheckBoxInListView_Click(object sender, RoutedEventArgs e)
+        {
+            DirtySetting = true;
+        }
+
+        private void AppAbout_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new AboutWindow();
+
+            // Display the dialog box and read the response
+            bool? result = dialog.ShowDialog();
+        }
+        //---------------------------------------------------
+
         // MonitorFromWindow
         private const uint MONITOR_DEFAULTTONEAREST = 2;
 
@@ -537,186 +882,12 @@ namespace RefreshRateWpfApp
         }
 
 
-        void OnClose(object sender, CancelEventArgs args)
-        {
-            tbi.Dispose();
-        }
-
-        private void Window_StateChanged(object sender, EventArgs e)
-        {
-            switch (this.WindowState)
-            {
-                case WindowState.Minimized:
-                    Hide();
-                    timer.Stop();
-                    break;
-                default:
-                    timer.Start();
-                    break;
-            }
-        }
-
-        private void tbi_TrayLeftMouseDown(object sender, RoutedEventArgs e)
-        {
-            Refresh_RefreshText();
-            Show();
-        }
-
-        private void tbi_TrayRightMouseDown(object sender, RoutedEventArgs e)
-        {
-            Refresh_RefreshText();
-        }
-
-        private void Button_Click_Refresh(object sender, RoutedEventArgs e)
-        {
-            //_posiibleRefreshrateList.Clear();
-            Refresh_RefreshText();
-        }
-
-        private void Button_Click_Save(object sender, RoutedEventArgs e)
-        {
-            SaveAction();
-        }
-
-        void SaveAction()
-        {
-            SetTrayFromPossibleRefreshList();
-            SaveToFile();
-            DirtySetting = false;
-        }
-        void SetTrayFromPossibleRefreshList()
-        {
-            SetTryItemsFromCollection(PossibleRefreshrateList);
-        }
-
-        void RefreshTryList()
-        {
-
-            var list = new List<RefreshDataModel>();
-
-            foreach (var item in ContextMenu.Items)
-            {
-                if (item is MenuItem menuitem && menuitem != null && menuitem.Tag != null)
-                {
-                    list.Add((RefreshDataModel)((MenuItem)item).Tag);
-
-                }
-            }
-
-            SetTryItemsFromCollection(list);
-        }
-
-        void SetTryItemsFromCollection(ICollection<RefreshDataModel> list)
-        {
-            while (ContextMenu.Items.Count > 1)
-            {
-                ContextMenu.Items.RemoveAt(ContextMenu.Items.Count - 1);
-            }
-
-            foreach (var item in list)
-            {
-                if (item.Choosed)
-                {
-
-                    if (!MonitorInfoListString.Contains(item.Monitor))
-                    {
-                        continue;
-                    }
-
-                    var menuItem = new MenuItem();
-                    menuItem.Header = item.FullName;
-
-                    //var monitorsList = list.Select(a => a.DisplayNumber).Distinct().ToList();
-                    //var isDsplayedMonitorNumber = IsMoreThenOneMonitor || monitorsList.Count > 1 ? true : int.Parse(monitorsList.First()) > 1 ? true : false;
-
-                    menuItem.Header = item.FullName; //item.FullName
-                    menuItem.Header += IsMoreThenOneMonitor ? " Disp.: " + item.DisplayNumber : string.Empty;
-                    menuItem.Tag = item;
-                    menuItem.Click += (a, b) =>
-                    {
-                        //SetFrequerency(uint.Parse(((MenuItem)a).Tag.ToString()));
-                        SetResolutionAndFrequerency((RefreshDataModel)((MenuItem)a).Tag);
-
-                    };
-                    ContextMenu.Items.Add(menuItem);
-
-                }
-            }
-        }
-        void SaveToFile()
-        {
-            List<string> listToSave = new List<string> { RunStartup.ToString(), RunAsMinimalized.ToString(), AllResolutionMode.ToString(), TestTime.ToString(), "<RES>" };
-
-            //listToSave.Add(this.textBlockActualRefreshRate.Text.Split('@')[0]);
-
-            PossibleRefreshrateList.Where(a => a.Choosed).Select(a => a.FullNameWithMonitor.ToString()).ToList().ForEach(a => listToSave.Add(a));
-
-            // using (var file = new StreamWriter("RefreshRate.cfg"))
-            var path = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "RefreshRate.cfg");
-            using (var file = new StreamWriter(path))
-            {
-                listToSave.ForEach(a => file.WriteLine(a));
-            }
-        }
-
-        void LoadFromFilePosiibleRefreshrateList()
-        {
-            try
-            {
-                var path = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "RefreshRate.cfg");
-
-                // using (var file = new StreamReader("RefreshRate.cfg"))
-                using (var file = new StreamReader(path))
-                {
-                    var line = file.ReadLine();
-                    RunStartup = bool.Parse(line);
-
-                    line = file.ReadLine();
-                    RunAsMinimalized = bool.Parse(line);
-
-                    line = file.ReadLine();
-                    AllResolutionMode = bool.Parse(line);
-
-                    line = file.ReadLine();
-                    TestTime = int.Parse(line);
-
-                    while (line != "<RES>")
-                    {
-                        line = file.ReadLine();
-                        if (line == null)
-                            return;
-                    }
-                    //line = file.ReadLine();
-                    //if (line == GetActualResolutionAndRefresRategString().Split('@')[0])
-                    PossibleRefreshrateList.Clear();
-
-                    while (!file.EndOfStream)
-                    {
-                        line = file.ReadLine();
-                        var (Width, Height, Refresh, Monitor) = GetResAndFreqAndMonitorFromString(line);
-
-                        PossibleRefreshrateList.Add(new RefreshDataModel
-                        {
-                            RefreshRate = Refresh,
-                            Height = Height,
-                            Width = Width,
-                            Monitor = Monitor,
-                            Choosed = true
-                        });
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
         [DllImport("Shcore.dll")]
         static extern int GetDpiForMonitor(
-    IntPtr hmonitor,
-    MonitorDpiType dpiType,
-    out uint dpiX,
-    out uint dpiY);
+             IntPtr hmonitor,
+             MonitorDpiType dpiType,
+             out uint dpiX,
+             out uint dpiY);
 
         enum MonitorDpiType
         {
@@ -724,168 +895,9 @@ namespace RefreshRateWpfApp
             MDT_ANGULAR_DPI = 1,
             MDT_RAW_DPI = 2
         }
-        private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
-        {
-            var resSettings = (RefreshDataModel)((Button)sender).DataContext;
-            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor);
 
 
-            SetResolutionAndFrequerency(resSettings);
-            var splitInfo = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor).FullNameWithMonitor.Split('@');
 
-            var infoString = splitInfo[0] + " @ " + splitInfo[1] + " " + splitInfo[2].Last();
-
-            //SetLabelRefreshRateAndHeader(infoString);
-
-            StackPanelAll.IsEnabled = false;
-
-            //////////////////////
-
-            SetMonitorsList();
-
-            // znajdź DISPLAY
-            var target = monitorInfoList.First(m => m.info.szDevice == resSettings.Monitor);
-
-            IntPtr hmonitor = target.handle;
-
-            var rectMon = target.info.rcMonitor;
-
-            var width = rectMon.right - rectMon.left;
-            var height = rectMon.bottom - rectMon.top;
-
-            uint dpiX, dpiY;
-            GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
-
-            var dpiScaleX = dpiX / 96.0;
-            var dpiScaleY = dpiY / 96.0;
-
-            /////////////////
-            // get dpi
-            //var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
-            //var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
-
-            // get screen size
-
-            var screenWidth = width / dpiScaleX;
-            var screenHeight = height / dpiScaleY;
-
-            //var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
-            //var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
-
-
-            var popupWidth = Popup.Width;
-            var popupHeight = Popup.Height;
-
-            var scaledWidth = popupWidth / dpiScaleX;
-            var scaledHeight = popupHeight / dpiScaleY;
-
-            var offsetX = (screenWidth - popupWidth) / 2;
-            var offsetY = (screenHeight - popupHeight) / 2;
-
-
-            Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
-            //Popup.HorizontalOffset = offsetX;
-            //Popup.VerticalOffset = offsetY;
-            Popup.HorizontalOffset = rectMon.left / dpiScaleX + offsetX;
-            Popup.VerticalOffset = rectMon.top / dpiScaleY + offsetY;
-
-            //////////////////////////////////
-
-
-            Popup.IsOpen = true;
-            Popup_Label1.Content = "Test: " + infoString;
-
-            await Task.Run(async () =>
-            {
-
-                for (int i = TestTime; i > 0; i--)
-                {
-
-                    this.Dispatcher.Invoke(() => { Popup_Label2.Content = i; });
-                    await Task.Delay(1000);
-                }
-
-            });
-
-            StackPanelAll.IsEnabled = true;
-
-            SetResolutionAndFrequerency(actualRefreshAndResolution);
-
-            SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRate());
-            Popup.IsOpen = false;
-        }
-
-        void Refresh_RefreshText()
-        {
-            var actualSetting = GetActualResolutionAndRefresRate();
-            SetLabelRefreshRateAndHeader(actualSetting);
-            SetPossibleRefreshRate(AllResolutionMode);
-        }
-
-        void SetLabelRefreshRateAndHeader(RefreshDataModel data)
-        {
-            this.textBlockActualRefreshRate.Text = data.FullName;
-            header.Header = this.textBlockActualRefreshRate.Text;
-            header.Header += IsMoreThenOneMonitor ? " Disp.: " + data.DisplayNumber : string.Empty;
-            header.Tag = data;
-            //header.IsEnabled = false;
-        }
-
-        void SetActalRefreshRateAndHeaderLabel()
-        {
-            var RefreshRate = GetActualResolutionAndRefresRate();
-
-            SetLabelRefreshRateAndHeader(RefreshRate);
-        }
-
-        //eg. 1920 x 1600 @ 60Hz"
-
-        private (uint Width, uint Height, uint Refresh, string Monitor) GetResAndFreqAndMonitorFromString(string data)
-        {
-
-            var split1 = data.Split('@');
-
-            var monitor = split1[2].Trim();
-            var refS = split1[1].Substring(0, split1[1].Length - 3).Trim();
-
-            var refU = uint.Parse(refS);
-
-            var heightU = uint.Parse(split1[0].Split('x')[1].Trim());
-            var widthU = uint.Parse(split1[0].Split('x')[0].Trim());
-
-
-            return (widthU, heightU, refU, monitor);
-
-        }
-
-        private void AppSave_Click(object sender, RoutedEventArgs e)
-        {
-            SaveAction();
-        }
-
-        private void AppExit_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void AppHide_Click(object sender, RoutedEventArgs e)
-        {
-            Hide();
-        }
-
-
-        private void CheckBoxInListView_Click(object sender, RoutedEventArgs e)
-        {
-            DirtySetting = true;
-        }
-
-        private void AppAbout_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new AboutWindow();
-
-            // Display the dialog box and read the response
-            bool? result = dialog.ShowDialog();
-        }
     }
 
 
