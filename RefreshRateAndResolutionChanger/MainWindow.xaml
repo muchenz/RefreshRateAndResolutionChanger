@@ -9,7 +9,7 @@
         xmlns:localStyleTest="clr-namespace:RefreshRateAndResolutionChanger.Resources.Styles.Test"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Refresh Rate App" Height="768" Width="400" FontSize="18"
+        Title="Refresh Rate App" Height="768" Width="370" FontSize="18"
         xmlns:tb="http://www.hardcodet.net/taskbar"        
         Closing="OnClose" 
         StateChanged="Window_StateChanged"
@@ -99,9 +99,9 @@
                     </StackPanel>
                 </GroupBox>
 
-                <StackPanel Grid.Row="2">
-                    <TextBlock Text="Actual Setting:" FontSize="16" Margin="0,15,0,0" ></TextBlock>
-                    <TextBlock x:Name="textBlockActualRefreshRate" Margin="15,5,0,0" FontWeight="DemiBold">textBlockActualRefreshRate</TextBlock>
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock Text="Actual Setting:" FontSize="15" Margin="0,18,0,0" ></TextBlock>
+                    <TextBlock x:Name="textBlockActualRefreshRate" Margin="5,15,0,0" FontWeight="DemiBold">textBlockActualRefreshRate</TextBlock>
                 </StackPanel>
 
                 <ListView Grid.Row="3" ItemsSource="{Binding PossibleRefreshrateList}" Margin="0,20,0,0" FontSize="14"
@@ -114,7 +114,7 @@
                                 <TextBlock Margin="10,6,0,0" Text="{Binding RefreshRateName}" Width="60"></TextBlock>
                                 <TextBlock  Visibility="{Binding DataContext.IsMoreThenOneMonitor,
                                                RelativeSource={RelativeSource AncestorType=Window},
-                                               Converter={StaticResource BoolToVis}}"  Margin="0,6,20,0" Text="{Binding DisplayNumber}" Width="10"></TextBlock>
+                                               Converter={StaticResource BoolToVis}}"  Margin="0,6,25,0" Text="{Binding DisplayNumber}" Width="10"></TextBlock>
                                 <Button FontSize="16" Margin="0,-2,5,-2" Padding="8,1,8,1" Click="Button_Click_TestAsync" Content="Test">
                                     <Button.IsEnabled>
                                         <MultiBinding Converter="{StaticResource DisableTestButton}">
