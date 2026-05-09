@@ -133,7 +133,8 @@
                     <Border BorderThickness="6" Background="Yellow" Padding="10" CornerRadius="10" >
                         <StackPanel Background="Yellow" HorizontalAlignment="Center">
                             <Label HorizontalAlignment="Center" FontSize="20" Name="Popup_Label1" FontWeight="Bold"></Label>
-                            <Label HorizontalAlignment="Center" Margin="0 30 0 0" FontSize="46" FontWeight="Bold"  Name="Popup_Label2"></Label>
+                            <Label HorizontalAlignment="Center" FontSize="20" Name="Popup_Label2" FontWeight="Bold"></Label>
+                            <Label HorizontalAlignment="Center" Margin="0 30 0 0" FontSize="46" FontWeight="Bold"  Name="Popup_Label_Counter"></Label>
                         </StackPanel>
                     </Border>
                 </Popup>
