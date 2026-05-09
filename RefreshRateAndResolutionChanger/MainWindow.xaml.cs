@@ -1,4 +1,5 @@
 ﻿using Hardcodet.Wpf.TaskbarNotification;
+using Microsoft.Win32;
 using RefreshRateAndResolutionChanger;
 using RefreshRateAndResolutionChanger.Properties;
 using System;
@@ -139,7 +140,7 @@ namespace RefreshRateWpfApp
             this.timer = new DispatcherTimer();
             this.timer.Interval = TimeSpan.FromMilliseconds(1000);
             this.timer.Tick += OnTimerTick;
-            this.timer.Start();
+            //this.timer.Start();
 
             SetMonitorsList();
             LoadFromFilePosiibleRefreshrateList();
@@ -162,7 +163,30 @@ namespace RefreshRateWpfApp
 
             RadioButtinAcualResMode.IsChecked = !RadioButtinAllResMode.IsChecked;
             DirtySetting = false;
+
+            monitorLastInfo = GetMONITORINFOEXW();
+
+            SystemEvents.DisplaySettingsChanged += (s, e) =>
+            {
+                //cached = GetMonitors();
+                //Console.WriteLine("Monitory się zmieniły!");
+
+                OnTimerTick(s, e);
+            };
         }
+
+        private void OnLocationOrSizeChanged(object sender, EventArgs e)
+        {
+            var actualMonitor = GetMONITORINFOEXW();
+            if (monitorLastInfo.szDevice == actualMonitor.szDevice)
+            {
+                 return;
+            }
+            monitorLastInfo = actualMonitor;
+            OnTimerTick(sender, e);
+        }
+
+
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
         extern static bool DestroyIcon(IntPtr handle);
 
@@ -193,9 +217,8 @@ namespace RefreshRateWpfApp
         delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
 
 
-        MONITORINFOEXW monitorInfo;
-        DEVMODEW devMode;
-        void SetDEVMODEW_and_MONITORINFOEXW()
+        MONITORINFOEXW monitorLastInfo;
+        MONITORINFOEXW GetMONITORINFOEXW()
         {
             // 1. Get the window handle ("HWND" in Win32 parlance)
             WindowInteropHelper helper = new WindowInteropHelper(this);
@@ -210,7 +233,7 @@ namespace RefreshRateWpfApp
             }
 
             // 3. Get more information about the monitor.
-            monitorInfo = new MONITORINFOEXW();
+            var monitorInfo = new MONITORINFOEXW();
             monitorInfo.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
 
             bool bResult = GetMonitorInfoW(hmonitor, ref monitorInfo);
@@ -220,16 +243,18 @@ namespace RefreshRateWpfApp
             }
 
             // 4. Get the current display settings for that monitor, which includes the resolution and refresh rate.
-            devMode = new DEVMODEW();
-            devMode.dmSize = (ushort)Marshal.SizeOf<DEVMODEW>();
+            //devMode = new DEVMODEW();
+            //devMode.dmSize = (ushort)Marshal.SizeOf<DEVMODEW>();
+
+            return monitorInfo;
         }
 
 
         private RefreshDataModel GetActualResolutionAndRefresRate()
         {
-            SetDEVMODEW_and_MONITORINFOEXW();
+            var monitorInfo = GetMONITORINFOEXW();
 
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out devMode);
+            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out var devMode);
             if (!bResult)
             {
                 throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
@@ -247,10 +272,10 @@ namespace RefreshRateWpfApp
             return currentSetting;
         }
 
-        private RefreshDataModel GetActualResolutionAndRefresRateFromMonitorg(string monitor)
+        private RefreshDataModel GetActualResolutionAndRefresRateFromMonitor(string monitor)
         {
 
-            bool bResult = EnumDisplaySettingsW(monitor, ENUM_CURRENT_SETTINGS, out devMode);
+            bool bResult = EnumDisplaySettingsW(monitor, ENUM_CURRENT_SETTINGS, out var devMode);
             if (!bResult)
             {
                 throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
@@ -271,9 +296,8 @@ namespace RefreshRateWpfApp
 
         private void SetPossibleRefreshRate(bool allResolution = false)
         {
-            SetDEVMODEW_and_MONITORINFOEXW();
-
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out devMode);
+            var monitorInfo = GetMONITORINFOEXW();
+            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out var devMode);
             if (!bResult)
             {
                 throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
@@ -393,9 +417,7 @@ namespace RefreshRateWpfApp
 
             // var (width, height, refresh, monitor) = GetResAndFreqAndMonitorFromString(settingsToSet);
 
-            SetDEVMODEW_and_MONITORINFOEXW();
-
-            bool bResult = EnumDisplaySettingsW(settingsToSet.Monitor, ENUM_CURRENT_SETTINGS, out devMode);
+            bool bResult = EnumDisplaySettingsW(settingsToSet.Monitor, ENUM_CURRENT_SETTINGS, out var devMode);
             if (!bResult)
             {
                 throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
@@ -599,11 +621,11 @@ namespace RefreshRateWpfApp
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
             var resSettings = (RefreshDataModel)((Button)sender).DataContext;
-            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor);
+            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFromMonitor(resSettings.Monitor);
 
 
             SetResolutionAndFrequerency(resSettings);
-            var splitInfo = GetActualResolutionAndRefresRateFromMonitorg(resSettings.Monitor).FullNameWithMonitor.Split('@');
+            var splitInfo = GetActualResolutionAndRefresRateFromMonitor(resSettings.Monitor).FullNameWithMonitor.Split('@');
 
             var infoString1 = splitInfo[0] + " @ " + splitInfo[1];
             var infoString2 = "Display: " + splitInfo[2].Last();
@@ -761,6 +783,9 @@ namespace RefreshRateWpfApp
             // Display the dialog box and read the response
             bool? result = dialog.ShowDialog();
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         //---------------------------------------------------
 
         // MonitorFromWindow
@@ -819,7 +844,7 @@ namespace RefreshRateWpfApp
         // EnumDisplaySettings
         private const uint ENUM_CURRENT_SETTINGS = unchecked((uint)-1);
 
-        public event PropertyChangedEventHandler PropertyChanged;
+       
 
         [DllImport("user32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]

@@ -11,7 +11,9 @@
         mc:Ignorable="d"
         Title="Refresh Rate App" Height="768" Width="370" FontSize="18"
         xmlns:tb="http://www.hardcodet.net/taskbar"        
-        Closing="OnClose" 
+        Closing="OnClose"
+        LocationChanged="OnLocationOrSizeChanged"
+        SizeChanged="OnLocationOrSizeChanged"
         StateChanged="Window_StateChanged"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Name="WindowApp">
