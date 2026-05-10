@@ -166,15 +166,17 @@ namespace RefreshRateWpfApp
 
             monitorLastInfo = GetMONITORINFOEXW();
 
+            var _monitorNameList = MonitorsName.GetMonitors();
             SystemEvents.DisplaySettingsChanged += (s, e) =>
             {
-                //cached = GetMonitors();
+                _monitorNameList = MonitorsName.GetMonitors();
+                SetMonitorsList();
                 //Console.WriteLine("Monitory się zmieniły!");
 
                 OnTimerTick(s, e);
             };
         }
-
+        List<MonitorsName.MonitorInfo> _monitorInfoList;
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
 
@@ -193,7 +195,7 @@ namespace RefreshRateWpfApp
 
         private unsafe void OnTimerTick(object sender, object e)
         {
-            SetMonitorsList();
+           
             var actualSetting = GetActualResolutionAndRefresRate();
 
             if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0]
@@ -634,6 +636,7 @@ namespace RefreshRateWpfApp
             SetMonitorsList();
 
             // znajdź DISPLAY
+
             var target = monitorInfoList.First(m => m.info.szDevice == resSettings.Monitor);
 
             IntPtr hmonitor = target.handle;
