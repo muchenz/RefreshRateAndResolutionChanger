@@ -12,6 +12,7 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -30,7 +31,6 @@ namespace RefreshRateWpfApp
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private DispatcherTimer timer;
-
         private int _testTime = 8;
 
         public int TestTime
@@ -137,9 +137,9 @@ namespace RefreshRateWpfApp
         {
             InitializeComponent();
 
-            this.timer = new DispatcherTimer();
-            this.timer.Interval = TimeSpan.FromMilliseconds(1000);
-            this.timer.Tick += OnTimerTick;
+            //this.timer = new DispatcherTimer();
+            //this.timer.Interval = TimeSpan.FromMilliseconds(1000);
+            //this.timer.Tick += OnTimerTick;
             //this.timer.Start();
 
             SetMonitorsList();
@@ -177,10 +177,11 @@ namespace RefreshRateWpfApp
 
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
+
             var actualMonitor = GetMONITORINFOEXW();
             if (monitorLastInfo.szDevice == actualMonitor.szDevice)
             {
-                 return;
+                return;
             }
             monitorLastInfo = actualMonitor;
             OnTimerTick(sender, e);
@@ -296,28 +297,20 @@ namespace RefreshRateWpfApp
 
         private void SetPossibleRefreshRate(bool allResolution = false)
         {
-            var monitorInfo = GetMONITORINFOEXW();
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out var devMode);
-            if (!bResult)
-            {
-                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
-            }
-
-            uint currentHeight = devMode.dmPelsHeight;
-            uint currentWidth = devMode.dmPelsWidth;
-
+            var actualMonSet = GetActualResolutionAndRefresRate();
             uint i = 0;
             //PosiibleRefreshrateList.Clear();
 
             List<RefreshDataModel> temPList = new List<RefreshDataModel>();
 
-            string actualResolitionandRefresh = string.Format("{0} x {1} @ {2}Hz", devMode.dmPelsWidth, devMode.dmPelsHeight, devMode.dmDisplayFrequency);
+            string actualResolitionandRefresh = string.Format("{0} x {1} @ {2}Hz", 
+                            actualMonSet.Width, actualMonSet.Height, actualMonSet.RefreshRate);
 
 
-            while (EnumDisplaySettingsW(monitorInfo.szDevice, i++, out devMode))
+            while (EnumDisplaySettingsW(actualMonSet.Monitor, i++, out var devMode))
             {
 
-                if (allResolution || (currentWidth == devMode.dmPelsWidth && currentHeight == devMode.dmPelsHeight))
+                if (allResolution || (actualMonSet.Width == devMode.dmPelsWidth && actualMonSet.Height == devMode.dmPelsHeight))
                 {
                     var t = new RefreshDataModel
                     {
@@ -325,7 +318,7 @@ namespace RefreshRateWpfApp
                     ,
                         Height = devMode.dmPelsHeight,
                         Width = devMode.dmPelsWidth,
-                        Monitor = monitorInfo.szDevice
+                        Monitor = actualMonSet.Monitor
                     };
 
                     //probably to remove this if statement (this cause lost choosed item when resolution changes)
@@ -405,7 +398,7 @@ namespace RefreshRateWpfApp
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
             IsMoreThenOneMonitor = monitorInfoList.Count > 1;
-            
+
             if (monitorInfoList.Count != monitorsOldCount)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorInfoListString)));
@@ -440,7 +433,7 @@ namespace RefreshRateWpfApp
             return res;
         }
 
-     
+
 
 
         void OnClose(object sender, CancelEventArgs args)
@@ -450,14 +443,15 @@ namespace RefreshRateWpfApp
 
         private void Window_StateChanged(object sender, EventArgs e)
         {
+
             switch (this.WindowState)
             {
                 case WindowState.Minimized:
                     Hide();
-                    timer.Stop();
+                    //timer.Stop();
                     break;
                 default:
-                    timer.Start();
+                    //timer.Start();
                     break;
             }
         }
@@ -617,7 +611,7 @@ namespace RefreshRateWpfApp
 
             }
         }
-        
+
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
             var resSettings = (RefreshDataModel)((Button)sender).DataContext;
@@ -711,7 +705,7 @@ namespace RefreshRateWpfApp
             SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRate());
             Popup.IsOpen = false;
         }
-       
+
         void Refresh_RefreshText()
         {
             var actualSetting = GetActualResolutionAndRefresRate();
@@ -844,7 +838,7 @@ namespace RefreshRateWpfApp
         // EnumDisplaySettings
         private const uint ENUM_CURRENT_SETTINGS = unchecked((uint)-1);
 
-       
+
 
         [DllImport("user32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
