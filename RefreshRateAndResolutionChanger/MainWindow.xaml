@@ -120,7 +120,7 @@
                                 <Button FontSize="16" Margin="0,-2,5,-2" Padding="8,1,8,1" Click="Button_Click_TestAsync" Content="Test">
                                     <Button.IsEnabled>
                                         <MultiBinding Converter="{StaticResource DisableTestButton}">
-                                            <Binding Path="Monitor" />
+                                            <Binding Path="MonitorDisplay" />
                                             <Binding Path="MonitorInfoListString"  RelativeSource="{RelativeSource AncestorType=Window}"/> 
                                         </MultiBinding>
                                     </Button.IsEnabled>

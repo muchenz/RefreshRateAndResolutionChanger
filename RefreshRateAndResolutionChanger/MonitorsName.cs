@@ -8,14 +8,13 @@ using System.Threading.Tasks;
 
 namespace RefreshRateAndResolutionChanger
 {
+    public class MonitorInfo
+    {
+        public string DisplayName;   // \\.\DISPLAY1
+        public string FriendlyName;  // np. Dell U2720Q
+    }
     internal class MonitorsName
     {
-        public class MonitorInfo
-        {
-            public string DisplayName;   // \\.\DISPLAY1
-            public string FriendlyName;  // np. Dell U2720Q
-        }
-
         public static List<MonitorInfo> GetMonitors()
         {
             var result = new List<MonitorInfo>();
