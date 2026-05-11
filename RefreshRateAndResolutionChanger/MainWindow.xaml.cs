@@ -184,7 +184,7 @@ namespace RefreshRateWpfApp
                 OnTimerTick(s, e);
             };
         }
-        List<MonitorInfo> _monitorInfoList;
+        List<MonitorInfo> _monitorInfoNamesList=new List<MonitorInfo>();
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
 
@@ -277,7 +277,7 @@ namespace RefreshRateWpfApp
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
                 MonitorDisplay = monitorInfo.szDevice,
-                MonitorName = _monitorInfoList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).FriendlyName
+                MonitorName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).FriendlyName
             };
 
             // Done!
@@ -299,7 +299,7 @@ namespace RefreshRateWpfApp
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
                 MonitorDisplay = display,
-                MonitorName = _monitorInfoList.FirstOrDefault(a => a.DisplayName == display).FriendlyName
+                MonitorName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).FriendlyName
             };
 
             // Done!
@@ -388,17 +388,17 @@ namespace RefreshRateWpfApp
         public ObservableCollection<RefreshDataModel> PossibleRefreshrateList => _posiibleRefreshrateList;
 
 
-        List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoList = new List<(IntPtr handle, MONITORINFOEXW info)>();
-        public List<string> MonitorInfoListString => monitorInfoList.Select(a => a.info.szDevice).ToList();
+        List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoHandlesList = new List<(IntPtr handle, MONITORINFOEXW info)>();
+        public List<string> MonitorNamesListString => _monitorInfoNamesList.Select(a => a.FriendlyName).ToList();
 
 
         private void SetMonitorsList()
         {
-            _monitorInfoList = MonitorsName.GetMonitors();
+            int monitorsOldCount = _monitorInfoNamesList?.Count ?? 0;
 
-            int monitorsOldCount = monitorInfoList.Count;
+            _monitorInfoNamesList = MonitorsName.GetMonitors();
 
-            monitorInfoList.Clear();
+            monitorInfoHandlesList.Clear();
 
             bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
             {
@@ -407,18 +407,18 @@ namespace RefreshRateWpfApp
 
                 GetMonitorInfoW(hMonitor, ref info);
 
-                monitorInfoList.Add((hMonitor, info));
+                monitorInfoHandlesList.Add((hMonitor, info));
                 return true;
             }
 
 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
-            IsMoreThenOneMonitor = monitorInfoList.Count > 1;
+            IsMoreThenOneMonitor = monitorInfoHandlesList.Count > 1;
 
-            if (monitorInfoList.Count != monitorsOldCount)
+            if (_monitorInfoNamesList.Count != monitorsOldCount)
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorInfoListString)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorNamesListString)));
             }
         }
 
@@ -540,7 +540,7 @@ namespace RefreshRateWpfApp
                     //    continue;
                     //}
 
-                    if (!_monitorInfoList.Select(a => a.FriendlyName).Contains(item.MonitorName))
+                    if (!_monitorInfoNamesList.Select(a => a.FriendlyName).Contains(item.MonitorName))
                     {
                         continue;
                     }
@@ -659,9 +659,9 @@ namespace RefreshRateWpfApp
 
             // znajdź DISPLAY
 
-            var targetDisplay = _monitorInfoList.FirstOrDefault(m => m.FriendlyName == resSettings.MonitorName).DisplayName;
+            var targetDisplay = _monitorInfoNamesList.FirstOrDefault(m => m.FriendlyName == resSettings.MonitorName).DisplayName;
 
-            var target = monitorInfoList.First(m => m.info.szDevice == targetDisplay);
+            var target = monitorInfoHandlesList.First(m => m.info.szDevice == targetDisplay);
 
             IntPtr hmonitor = target.handle;
 
