@@ -101,6 +101,30 @@
                     </StackPanel>
                 </GroupBox>
 
+
+                <!--<Expander Header="Test Time" FontSize="14" d:IsHidden="True" Grid.Row="1"
+                    materialDesign:ExpanderAssist.HorizontalHeaderPadding="9 2 9 5"
+                    materialDesign:ExpanderAssist.HeaderBackground="{DynamicResource MaterialDesign.Brush.Primary}"
+                    Foreground="White"
+     >
+                    <Border BorderThickness="1" BorderBrush="{DynamicResource MaterialDesign.Brush.Primary}" Background="White"
+                        Padding="5">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="Black"/>
+                                </Style>
+                            </StackPanel.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding ElementName=Slider, Path=Value}" ></TextBlock>
+                                <TextBlock Text=" seconds"/>
+                            </StackPanel>
+                            <Slider x:Name="Slider" Value="{Binding TestTime}" Minimum="1" Maximum="20" />
+
+                        </StackPanel>
+                    </Border>
+                </Expander>-->
+
                 <StackPanel Grid.Row="2" Orientation="Horizontal">
                     <TextBlock Text="Actual Setting:" FontSize="15" Margin="0,18,0,0" ></TextBlock>
                     <TextBlock x:Name="textBlockActualRefreshRate" Margin="5,15,0,0" FontWeight="DemiBold">textBlockActualRefreshRate</TextBlock>
@@ -121,7 +145,7 @@
                                     <Button.IsEnabled>
                                         <MultiBinding Converter="{StaticResource DisableTestButton}">
                                             <Binding Path="MonitorName" />
-                                            <Binding Path="MonitorNamesListString"  RelativeSource="{RelativeSource AncestorType=Window}"/> 
+                                            <Binding Path="MonitorNamesListString"  RelativeSource="{RelativeSource AncestorType=Window}"/>
                                         </MultiBinding>
                                     </Button.IsEnabled>
 
