@@ -138,13 +138,13 @@
                                 <CheckBox Margin="0,0,10,0" IsChecked="{Binding Choosed}" Click="CheckBoxInListView_Click"></CheckBox>
                                 <TextBlock Margin="10,6,5,0" Text="{Binding ResolutionName}" Width="90"></TextBlock>
                                 <TextBlock Margin="10,6,0,0" Text="{Binding RefreshRateName}" Width="60"></TextBlock>
-                                <TextBlock  Visibility="{Binding DataContext.IsMoreThenOneMonitor,
+                                <TextBlock Visibility="{Binding DataContext.IsMoreThenOneMonitor,
                                                RelativeSource={RelativeSource AncestorType=Window},
                                                Converter={StaticResource BoolToVis}}"  Margin="0,6,25,0" Text="{Binding DisplayNumber}" Width="10"></TextBlock>
                                 <Button FontSize="16" Margin="0,-2,5,-2" Padding="8,1,8,1" Click="Button_Click_TestAsync" Content="Test">
                                     <Button.IsEnabled>
                                         <MultiBinding Converter="{StaticResource DisableTestButton}">
-                                            <Binding Path="MonitorName" />
+                                            <Binding Path="MonitorIdName" />
                                             <Binding Path="MonitorNamesListString"  RelativeSource="{RelativeSource AncestorType=Window}"/>
                                         </MultiBinding>
                                     </Button.IsEnabled>

@@ -11,7 +11,7 @@ namespace RefreshRateAndResolutionChanger
     public class MonitorInfo
     {
         public string DisplayName;   // \\.\DISPLAY1
-        public string FriendlyName;  // np. Dell U2720Q
+        public string IdName;  // np. Dell U2720Q
     }
     internal class MonitorsName
     {
@@ -50,7 +50,7 @@ namespace RefreshRateAndResolutionChanger
                         result.Add(new MonitorInfo
                         {
                             DisplayName = d.DeviceName,
-                            FriendlyName = friendly
+                            IdName = friendly
                         });
                     }
                 }

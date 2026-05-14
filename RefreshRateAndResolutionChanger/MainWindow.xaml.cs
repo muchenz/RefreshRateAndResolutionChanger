@@ -277,7 +277,7 @@ namespace RefreshRateWpfApp
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
                 MonitorDisplay = monitorInfo.szDevice,
-                MonitorName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).FriendlyName
+                MonitorIdName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).IdName
             };
 
             // Done!
@@ -299,7 +299,7 @@ namespace RefreshRateWpfApp
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
                 MonitorDisplay = display,
-                MonitorName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).FriendlyName
+                MonitorIdName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).IdName
             };
 
             // Done!
@@ -333,7 +333,7 @@ namespace RefreshRateWpfApp
                         Height = devMode.dmPelsHeight,
                         Width = devMode.dmPelsWidth,
                         MonitorDisplay = actualMonSet.MonitorDisplay,
-                        MonitorName = actualMonSet.MonitorName
+                        MonitorIdName = actualMonSet.MonitorIdName
                     };
 
                     //probably to remove this if statement (this cause lost choosed item when resolution changes)
@@ -389,7 +389,7 @@ namespace RefreshRateWpfApp
 
 
         List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoHandlesList = new List<(IntPtr handle, MONITORINFOEXW info)>();
-        public List<string> MonitorNamesListString => _monitorInfoNamesList.Select(a => a.FriendlyName).ToList();
+        public List<string> MonitorNamesListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
 
 
         private void SetMonitorsList()
@@ -540,7 +540,7 @@ namespace RefreshRateWpfApp
                     //    continue;
                     //}
 
-                    if (!_monitorInfoNamesList.Select(a => a.FriendlyName).Contains(item.MonitorName))
+                    if (!_monitorInfoNamesList.Select(a => a.IdName).Contains(item.MonitorIdName))
                     {
                         continue;
                     }
@@ -623,7 +623,7 @@ namespace RefreshRateWpfApp
                             Height = Height,
                             Width = Width,
                             MonitorDisplay = MonitorDisplay,
-                            MonitorName = MonitorName,
+                            MonitorIdName = MonitorName,
                             Choosed = true
                         });
                     }
@@ -659,7 +659,7 @@ namespace RefreshRateWpfApp
 
             // znajdź DISPLAY
 
-            var targetDisplay = _monitorInfoNamesList.FirstOrDefault(m => m.FriendlyName == resSettings.MonitorName).DisplayName;
+            var targetDisplay = _monitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName).DisplayName;
 
             var target = monitorInfoHandlesList.First(m => m.info.szDevice == targetDisplay);
 
@@ -969,11 +969,12 @@ namespace RefreshRateWpfApp
         public uint Width { get; set; }
         public uint Height { get; set; }
         public string MonitorDisplay { get; set; }
-        public string MonitorName { get; set; }
+        public string MonitorIdName { get; set; }
+        public string MonitorName => MonitorNameConverter.ConvertMonitorName(MonitorIdName);
         public string ResolutionName => $"{Width} x {Height}";
         public string FullName => $"{Width} x {Height} @ {RefreshRate} Hz";
         public string FullNameWithMonitorDisplay => $"{Width} x {Height} @ {RefreshRate} Hz @ {MonitorDisplay}";
-        public string FullNameWithMonitorDisplayAndName => $"{Width} x {Height} @ {RefreshRate} Hz @ {MonitorDisplay} @ {MonitorName}";
+        public string FullNameWithMonitorDisplayAndName => $"{Width} x {Height} @ {RefreshRate} Hz @ {MonitorDisplay} @ {MonitorIdName}";
         public string FullNameWithMonitorForDisplay => $"{Width} x {Height} @ {RefreshRate} Hz {MonitorDisplay.Last()}";
         public string DisplayNumber => $"{MonitorDisplay.Last()}";
         public uint RefreshRate { get; set; }
@@ -1011,4 +1012,55 @@ namespace RefreshRateWpfApp
             }
         }
     }
+
+
+    public class MonitorNameConverter
+    {
+
+        public static string  ConvertMonitorName(string name)
+        {
+            var vendor = name.Substring(0, 3);
+
+
+            if (monitorVendorMap.TryGetValue(vendor, out var fullName))
+            {
+                return fullName + " " + name.Substring(4);
+            }
+
+            return name;
+        }
+
+        static Dictionary<string, string> monitorVendorMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+{
+    { "SAM", "Samsung" },
+    { "LGE", "LG" },
+    { "LGD", "LG" },
+    { "DEL", "Dell" },
+    { "HPN", "HP" },
+    { "LEN", "Lenovo" },
+    { "ACI", "Acer" },
+    { "ACR", "Acer" },
+    { "ASU", "ASUS" },
+    { "MSI", "MSI" },
+    { "GIG", "Gigabyte" },
+    { "AOC", "AOC" },
+    { "TOP", "TPV" },
+    { "BNQ", "BenQ" },
+    { "VSC", "ViewSonic" },
+    { "PHL", "Philips" },
+    { "IVM", "iiyama" },
+    { "IIY", "iiyama" },
+    { "EIZ", "EIZO" },
+    { "SHP", "Sharp" },
+    { "FUS", "Fujitsu" },
+    { "NEC", "NEC" },
+    { "HUA", "Huawei" },
+    { "XIA", "Xiaomi" },
+    { "TCL", "TCL" },
+    { "HIS", "Hisense" },
+    { "SKW", "Skyworth" },
+    { "PHC", "Philco" }
+};
+    }
+
 }
