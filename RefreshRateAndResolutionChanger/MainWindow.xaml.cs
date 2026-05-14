@@ -151,7 +151,7 @@ namespace RefreshRateWpfApp
             //this.timer.Tick += OnTimerTick;
             //this.timer.Start();
 
-            
+
             LoadFromFilePosiibleRefreshrateList();
             Refresh_RefreshText();
             SetTrayFromPossibleRefreshList();
@@ -177,14 +177,14 @@ namespace RefreshRateWpfApp
 
             SystemEvents.DisplaySettingsChanged += (s, e) =>
             {
-               
+
                 SetMonitorsList();
                 //Console.WriteLine("Monitory się zmieniły!");
 
                 OnTimerTick(s, e);
             };
         }
-        List<MonitorInfo> _monitorInfoNamesList=new List<MonitorInfo>();
+        List<MonitorInfo> _monitorInfoNamesList = new List<MonitorInfo>();
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
 
@@ -203,7 +203,7 @@ namespace RefreshRateWpfApp
 
         private unsafe void OnTimerTick(object sender, object e)
         {
-           
+
             var actualSetting = GetActualResolutionAndRefresRate();
 
             if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0]
@@ -317,7 +317,7 @@ namespace RefreshRateWpfApp
 
             List<RefreshDataModel> temPList = new List<RefreshDataModel>();
 
-            string actualResolitionandRefresh = string.Format("{0} x {1} @ {2}Hz", 
+            string actualResolitionandRefresh = string.Format("{0} x {1} @ {2}Hz",
                             actualMonSet.Width, actualMonSet.Height, actualMonSet.RefreshRate);
 
 
@@ -1017,7 +1017,7 @@ namespace RefreshRateWpfApp
     public class MonitorNameConverter
     {
 
-        public static string  ConvertMonitorName(string name)
+        public static string ConvertMonitorName(string name)
         {
             var vendor = name.Substring(0, 3);
 
@@ -1059,7 +1059,22 @@ namespace RefreshRateWpfApp
     { "TCL", "TCL" },
     { "HIS", "Hisense" },
     { "SKW", "Skyworth" },
-    { "PHC", "Philco" }
+    { "PHC", "Philco" },
+    
+    { "RZR", "Razer" },
+    { "ALI", "Alienware" }, 
+    { "CLE", "Clevo" },
+
+    { "SEC", "Samsung" },          
+    { "AUO", "AU Optronics" },      
+    { "BOE", "BOE" },               
+    { "CMO", "Chi Mei/Innolux" }, 
+    { "IVO", "InfoVision" },
+
+    { "APP", "Apple" },
+    { "SON", "Sony" },
+    { "PAN", "Panasonic" },
+    { "SNY", "Sony" },              
 };
     }
 
