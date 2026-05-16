@@ -416,12 +416,25 @@ namespace RefreshRateWpfApp
 
             IsMoreThenOneMonitor = monitorInfoHandlesList.Count > 1;
 
+            SetProperDisplayInPossibleRefreshrateList();
+
             if (_monitorInfoNamesList.Count != monitorsOldCount)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorNamesListString)));
             }
         }
 
+        private void SetProperDisplayInPossibleRefreshrateList()
+        {
+            foreach (var item in PossibleRefreshrateList)
+            {
+                var monitor = _monitorInfoNamesList.FirstOrDefault(a => a.IdName == item.MonitorIdName);
+                if (monitor != null)
+                {
+                    item.MonitorDisplay = monitor.DisplayName;
+                }
+            }
+        }
         private int SetResolutionAndFrequerency(RefreshDataModel settingsToSet)
         {
 
@@ -627,6 +640,7 @@ namespace RefreshRateWpfApp
                             Choosed = true
                         });
                     }
+                    SetProperDisplayInPossibleRefreshrateList();
                 }
             }
             catch (Exception ex)
