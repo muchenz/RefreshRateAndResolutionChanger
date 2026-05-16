@@ -414,12 +414,13 @@ namespace RefreshRateWpfApp
 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
-            IsMoreThenOneMonitor = monitorInfoHandlesList.Count > 1;
+            IsMoreThenOneMonitor = _monitorInfoNamesList.Count > 1;
 
             SetProperDisplayInPossibleRefreshrateList();
 
             if (_monitorInfoNamesList.Count != monitorsOldCount)
-            {
+            //if (monitorInfoHandlesList.Count != monitorsOldCount)
+                {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorNamesListString)));
             }
         }
@@ -1021,7 +1022,7 @@ namespace RefreshRateWpfApp
                 hash = hash * 23 + obj.Width.GetHashCode();
                 hash = hash * 23 + obj.Height.GetHashCode();
                 hash = hash * 23 + obj.RefreshRate.GetHashCode();
-                hash = hash * 23 + (obj.MonitorDisplay?.GetHashCode() ?? 0);
+                hash = hash * 23 + (obj.MonitorIdName?.GetHashCode() ?? 0);
                 return hash;
             }
         }

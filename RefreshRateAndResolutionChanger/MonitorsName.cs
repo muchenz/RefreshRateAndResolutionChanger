@@ -32,7 +32,8 @@ namespace RefreshRateAndResolutionChanger
                     DISPLAY_DEVICE monitor = new DISPLAY_DEVICE();
                     monitor.cb = Marshal.SizeOf(monitor);
 
-                    if (EnumDisplayDevices(d.DeviceName, 0, ref monitor, 0))
+                    uint devNum2 = 0;
+                    while (EnumDisplayDevices(d.DeviceName, devNum2, ref monitor, 0))
                     {
                         string deviceId = monitor.DeviceID;
 
@@ -52,6 +53,10 @@ namespace RefreshRateAndResolutionChanger
                             DisplayName = d.DeviceName,
                             IdName = friendly
                         });
+                        devNum2++;
+                        monitor = new DISPLAY_DEVICE();
+                        monitor.cb = Marshal.SizeOf(monitor);
+
                     }
                 }
 
