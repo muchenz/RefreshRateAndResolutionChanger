@@ -1008,7 +1008,7 @@ namespace RefreshRateWpfApp
             return x.Width == y.Width &&
                    x.Height == y.Height &&
                    x.RefreshRate == y.RefreshRate &&
-                   x.MonitorDisplay == y.MonitorDisplay;
+                   x.MonitorIdName == y.MonitorIdName;
         }
 
         public int GetHashCode(RefreshDataModel obj)
