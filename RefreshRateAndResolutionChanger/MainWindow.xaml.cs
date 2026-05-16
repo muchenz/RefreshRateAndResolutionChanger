@@ -207,7 +207,7 @@ namespace RefreshRateWpfApp
             var actualSetting = GetActualResolutionAndRefresRate();
 
             if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0]
-                && actualSetting.MonitorDisplay == ((RefreshDataModel)header.Tag).MonitorDisplay)
+                && actualSetting.MonitorIdName == ((RefreshDataModel)header.Tag).MonitorIdName)
             {
                 SetLabelRefreshRateAndHeader(actualSetting);
             }
@@ -1069,6 +1069,7 @@ namespace RefreshRateWpfApp
     { "AUO", "AU Optronics" },      
     { "BOE", "BOE" },               
     { "CMO", "Chi Mei/Innolux" }, 
+    { "CMN", "Chi Mei/Innolux" },
     { "IVO", "InfoVision" },
 
     { "APP", "Apple" },
