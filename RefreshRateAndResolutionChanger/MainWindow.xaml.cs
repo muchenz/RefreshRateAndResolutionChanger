@@ -391,7 +391,7 @@ namespace RefreshRateWpfApp
         List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoHandlesList = new List<(IntPtr handle, MONITORINFOEXW info)>();
         public List<string> MonitorNamesListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
 
-
+        public bool IsDuplicationMode => _monitorInfoNamesList.GroupBy(a => a.DisplayName).Any(a => a.Count() > 1);
         private void SetMonitorsList()
         {
             int monitorsOldCount = _monitorInfoNamesList?.Count ?? 0;
@@ -416,8 +416,9 @@ namespace RefreshRateWpfApp
 
             IsMoreThenOneMonitor = _monitorInfoNamesList.Count > 1;
 
-            SetProperDisplayInPossibleRefreshrateList();
+            SetProperDisplayNameInPossibleRefreshrateList();
 
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicationMode)));
             if (_monitorInfoNamesList.Count != monitorsOldCount)
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
                 {
@@ -425,7 +426,7 @@ namespace RefreshRateWpfApp
             }
         }
 
-        private void SetProperDisplayInPossibleRefreshrateList()
+        private void SetProperDisplayNameInPossibleRefreshrateList()
         {
             foreach (var item in PossibleRefreshrateList)
             {
@@ -641,7 +642,7 @@ namespace RefreshRateWpfApp
                             Choosed = true
                         });
                     }
-                    SetProperDisplayInPossibleRefreshrateList();
+                    SetProperDisplayNameInPossibleRefreshrateList();
                 }
             }
             catch (Exception ex)
@@ -1034,6 +1035,11 @@ namespace RefreshRateWpfApp
 
         public static string ConvertMonitorName(string name)
         {
+            if (name.Length<4 || name[3]!=' ')
+            {
+                return name;
+            }
+
             var vendor = name.Substring(0, 3);
 
 

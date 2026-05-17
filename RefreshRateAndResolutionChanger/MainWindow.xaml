@@ -59,6 +59,7 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
@@ -125,12 +126,18 @@
                     </Border>
                 </Expander>-->
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                <StackPanel Grid.Row="3" Orientation="Horizontal">
                     <TextBlock Text="Actual Setting:" FontSize="15" Margin="0,18,0,0" ></TextBlock>
                     <TextBlock x:Name="textBlockActualRefreshRate" Margin="5,15,0,0" FontWeight="DemiBold">textBlockActualRefreshRate</TextBlock>
                 </StackPanel>
+                <StackPanel Grid.Row="4" Orientation="Horizontal">
+                    <TextBlock Text="Screen duplication detected. " FontSize="11" Margin="0,0,0,0" Foreground="MediumPurple"
+                               Visibility="{Binding DataContext.IsDuplicationMode,
+                                               
+                                               Converter={StaticResource BoolToVis}}"></TextBlock>
+                </StackPanel>
 
-                <ListView Grid.Row="3" ItemsSource="{Binding PossibleRefreshrateList}" Margin="0,20,0,0" FontSize="14"
+                <ListView Grid.Row="4" ItemsSource="{Binding PossibleRefreshrateList}" Margin="0,20,0,0" FontSize="14"
                                    ScrollViewer.VerticalScrollBarVisibility="Visible">
                     <ListView.ItemTemplate>
                         <DataTemplate>
@@ -164,7 +171,7 @@
                         </StackPanel>
                     </Border>
                 </Popup>
-                <StackPanel Grid.Row="4" Orientation="Horizontal">
+                <StackPanel Grid.Row="5" Orientation="Horizontal">
                     <!--<Button Click="Button_Click_Refresh" Margin="5">Refresh</Button>-->
                     <Button Click="Button_Click_Save" Margin="75, 20,0,0" Padding="10,5,10,5" IsEnabled="{Binding DirtySetting}">Save to File and Tray</Button>
                 </StackPanel>

@@ -37,7 +37,8 @@ namespace RefreshRateAndResolutionChanger
                     {
                         string deviceId = monitor.DeviceID;
 
-                        string friendly = "Unknown";
+                        //string friendly = "Unknown";
+                        string friendly = deviceId.Split('\\')[1];
 
                         foreach (var wmi in wmiNames)
                         {
