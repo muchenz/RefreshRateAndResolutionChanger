@@ -91,7 +91,7 @@ namespace RefreshRateWpfApp
                 _allResolutionMode = value;
                 DirtySetting = true;
                 SetActalRefreshRateAndHeaderLabel();
-                SetPossibleRefreshRate(value);
+                SetPossibleRefreshRateList(value);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AllResolutionMode)));
             }
         }
@@ -213,7 +213,7 @@ namespace RefreshRateWpfApp
             }
             else
             {
-                SetPossibleRefreshRate(AllResolutionMode);
+                SetPossibleRefreshRateList(AllResolutionMode);
                 SetLabelRefreshRateAndHeader(actualSetting);
             }
         }
@@ -307,7 +307,7 @@ namespace RefreshRateWpfApp
         }
 
 
-        private void SetPossibleRefreshRate(bool allResolution = false)
+        private void SetPossibleRefreshRateList(bool allResolution = false)
         {
 
 
@@ -753,7 +753,7 @@ namespace RefreshRateWpfApp
         {
             var actualSetting = GetActualResolutionAndRefresRate();
             SetLabelRefreshRateAndHeader(actualSetting);
-            SetPossibleRefreshRate(AllResolutionMode);
+            SetPossibleRefreshRateList(AllResolutionMode);
         }
 
         void SetLabelRefreshRateAndHeader(RefreshDataModel data)
