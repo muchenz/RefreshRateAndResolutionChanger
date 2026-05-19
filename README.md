@@ -3,7 +3,8 @@ RefreshRateAndResolutionChanger
  allows you to quickly change the resolution and refresh rate.
 
  Installer:
-[RefreshRateAndResolutionChanger.zip](https://github.com/user-attachments/files/28025293/RefreshRateAndResolutionChanger.zip)
+[RefreshRateAndResolutionChanger.zip](https://github.com/user-attachments/files/28028177/RefreshRateAndResolutionChanger.zip)
+
 
 ---
 ### Single monitor
