@@ -1,8 +1,9 @@
+
 RefreshRateAndResolutionChanger
  allows you to quickly change the resolution and refresh rate.
 
  Installer:
-(https://github.com/user-attachments/files/27969743/RefreshRateAndResolutionChanger.zip)
+[RefreshRateAndResolutionChanger.zip](https://github.com/user-attachments/files/28025293/RefreshRateAndResolutionChanger.zip)
 
 ---
 ### Single monitor
@@ -15,7 +16,7 @@ RefreshRateAndResolutionChanger
 ---
 ### Multiple monitors
 
-Moving the program window to a specific monitor will display the available modes. The display number is also visible. The selected modes will appear in the system tray, along with additional information about which display they apply to.[RefreshRateAndResolutionChanger.zip]
+Moving the program window to a specific monitor will display the available modes. The display number is also visible. The selected modes will appear in the system tray, along with additional information about which display they apply to.
 
 
 <img width="422" height="900" alt="refresh1" src="https://github.com/user-attachments/assets/f3914581-71e5-43ef-9392-cc0e5c62c2fb" />
