@@ -1332,7 +1332,6 @@ namespace RefreshRateWpfApp
 { "MEK", "MEK" },
 { "MCE", "Metz" },
 { "Mod", "MFG" },
-{ "XMI", "Mi" },
 { "MSH", "Microsoft" },
 { "MTC", "MiTAC" },
 { "SZM", "MiTAC" },
