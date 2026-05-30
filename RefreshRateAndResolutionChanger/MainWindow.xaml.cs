@@ -389,12 +389,12 @@ namespace RefreshRateWpfApp
 
 
         List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoHandlesList = new List<(IntPtr handle, MONITORINFOEXW info)>();
-        public List<string> MonitorNamesListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
+        public List<string> MonitorsIdNameListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
 
         public bool IsDuplicationMode => _monitorInfoNamesList.GroupBy(a => a.DisplayName).Any(a => a.Count() > 1);
         private void SetMonitorsList()
         {
-            int monitorsOldCount = _monitorInfoNamesList?.Count ?? 0;
+            List<MonitorInfo> monitorsOldList = _monitorInfoNamesList.ToList();
 
             _monitorInfoNamesList = MonitorsName.GetMonitors();
 
@@ -416,17 +416,18 @@ namespace RefreshRateWpfApp
 
             IsMoreThenOneMonitor = _monitorInfoNamesList.Count > 1;
 
-            SetProperDisplayNameInPossibleRefreshrateList();
+            SetProperDisplayNumberInPossibleRefreshrateList();
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicationMode)));
-            if (_monitorInfoNamesList.Count != monitorsOldCount)
+
+            if (!_monitorInfoNamesList.Select(a=>a.IdName).SequenceEqual(monitorsOldList.Select(a=>a.IdName)))
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
                 {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorNamesListString)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorsIdNameListString)));
             }
         }
 
-        private void SetProperDisplayNameInPossibleRefreshrateList()
+        private void SetProperDisplayNumberInPossibleRefreshrateList()
         {
             foreach (var item in PossibleRefreshrateList)
             {
@@ -642,7 +643,7 @@ namespace RefreshRateWpfApp
                             Choosed = true
                         });
                     }
-                    SetProperDisplayNameInPossibleRefreshrateList();
+                    SetProperDisplayNumberInPossibleRefreshrateList();
                 }
             }
             catch (Exception ex)

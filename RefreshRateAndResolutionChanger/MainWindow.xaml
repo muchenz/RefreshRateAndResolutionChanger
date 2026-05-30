@@ -156,7 +156,7 @@
                                     <Button.IsEnabled>
                                         <MultiBinding Converter="{StaticResource DisableTestButton}">
                                             <Binding Path="MonitorIdName" />
-                                            <Binding Path="MonitorNamesListString"  RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                            <Binding Path="MonitorsIdNameListString"  RelativeSource="{RelativeSource AncestorType=Window}"/>
                                         </MultiBinding>
                                     </Button.IsEnabled>
 
