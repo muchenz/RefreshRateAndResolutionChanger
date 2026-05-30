@@ -105,7 +105,6 @@ namespace RefreshRateWpfApp
             {
                 if (value == _isMoreThenOneMonitor) return;
                 _isMoreThenOneMonitor = value;
-                RefreshTryList();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMoreThenOneMonitor)));
             }
         }
@@ -412,21 +411,19 @@ namespace RefreshRateWpfApp
 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
-            IsMoreThenOneMonitor = monitorsNewList.Count > 1;
-
-
 
             if (!_monitorInfoNamesList.Select(a=>a.IdName).SequenceEqual(monitorsNewList.Select(a=>a.IdName)))
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
             {
                 _monitorInfoNamesList = monitorsNewList;
-
+                IsMoreThenOneMonitor = monitorsNewList.Count > 1;
                 SetProperDisplayNumberInPossibleRefreshrateList();
+                RefreshTryList();
+
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicationMode)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorsIdNameListString)));
             }
         }
-
         private void SetProperDisplayNumberInPossibleRefreshrateList()
         {
             foreach (var item in PossibleRefreshrateList)
@@ -981,11 +978,25 @@ namespace RefreshRateWpfApp
     }
 
 
-    public class RefreshDataModel
+    public class RefreshDataModel:INotifyPropertyChanged
     {
         public uint Width { get; set; }
         public uint Height { get; set; }
-        public string MonitorDisplay { get; set; }
+
+        private string _monitorDisplay;
+        public string MonitorDisplay
+        {
+            get => _monitorDisplay;
+            set
+            {
+                if (_monitorDisplay != value)
+                {
+                    _monitorDisplay = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorDisplay)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayNumber)));
+                }
+            }
+        }
         public string MonitorIdName { get; set; }
         public string MonitorName => MonitorNameConverter.ConvertMonitorName(MonitorIdName);
         public string ResolutionName => $"{Width} x {Height}";
@@ -999,6 +1010,7 @@ namespace RefreshRateWpfApp
 
         public bool Choosed { get; set; }
 
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 
     public class RefreshDataModelEqualityComparer : IEqualityComparer<RefreshDataModel>
