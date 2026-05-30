@@ -153,7 +153,7 @@ namespace RefreshRateWpfApp
 
             LoadFromFilePosiibleRefreshrateList();
             Refresh_RefreshText();
-            SetTrayFromPossibleRefreshList();
+            SetTrayFromActualTryList();
 
             //tbi.Icon = SystemIcons.Error;
             //var aaa = new Bitmap("f:\\ikona.bmp");
@@ -386,6 +386,8 @@ namespace RefreshRateWpfApp
 
         public ObservableCollection<RefreshDataModel> PossibleRefreshrateList => _posiibleRefreshrateList;
 
+        List<RefreshDataModel> _actualTryList =new List<RefreshDataModel>();
+
 
         List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoHandlesList = new List<(IntPtr handle, MONITORINFOEXW info)>();
         public List<string> MonitorsIdNameListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
@@ -510,30 +512,32 @@ namespace RefreshRateWpfApp
 
         void SaveAction()
         {
-            SetTrayFromPossibleRefreshList();
+            _actualTryList.Clear();
+            _actualTryList.AddRange(PossibleRefreshrateList);
+            SetTrayFromActualTryList();
             SaveToFile();
             DirtySetting = false;
         }
-        void SetTrayFromPossibleRefreshList()
+        void SetTrayFromActualTryList()
         {
-            SetTryItemsFromCollection(PossibleRefreshrateList);
+            SetTryItemsFromCollection(_actualTryList);
         }
 
         void RefreshTryList()
         {
 
-            var list = new List<RefreshDataModel>();
+            //var list = new List<RefreshDataModel>();
 
-            foreach (var item in ContextMenu.Items)
-            {
-                if (item is MenuItem menuitem && menuitem?.Tag != null)
-                {
-                    list.Add((RefreshDataModel)((MenuItem)item).Tag);
+            //foreach (var item in ContextMenu.Items)
+            //{
+            //    if (item is MenuItem menuitem && menuitem?.Tag != null)
+            //    {
+            //        list.Add((RefreshDataModel)((MenuItem)item).Tag);
 
-                }
-            }
+            //    }
+            //}
 
-            SetTryItemsFromCollection(list);
+            SetTryItemsFromCollection(_actualTryList);
         }
 
         void SetTryItemsFromCollection(ICollection<RefreshDataModel> list)
@@ -630,7 +634,7 @@ namespace RefreshRateWpfApp
                         line = file.ReadLine();
                         var (Width, Height, Refresh, MonitorDisplay, MonitorName) = GetResAndFreqAndMonitorFromString(line);
 
-                        PossibleRefreshrateList.Add(new RefreshDataModel
+                        var item = new RefreshDataModel
                         {
                             RefreshRate = Refresh,
                             Height = Height,
@@ -638,7 +642,10 @@ namespace RefreshRateWpfApp
                             MonitorDisplay = MonitorDisplay,
                             MonitorIdName = MonitorName,
                             Choosed = true
-                        });
+                        };
+
+                        PossibleRefreshrateList.Add(item);
+                        _actualTryList.Add(item);
                     }
                     SetProperDisplayNumberInPossibleRefreshrateList();
                 }
