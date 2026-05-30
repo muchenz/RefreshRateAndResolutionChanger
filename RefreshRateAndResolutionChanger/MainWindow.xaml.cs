@@ -394,9 +394,7 @@ namespace RefreshRateWpfApp
         public bool IsDuplicationMode => _monitorInfoNamesList.GroupBy(a => a.DisplayName).Any(a => a.Count() > 1);
         private void SetMonitorsList()
         {
-            List<MonitorInfo> monitorsOldList = _monitorInfoNamesList.ToList();
-
-            _monitorInfoNamesList = MonitorsName.GetMonitors();
+            List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
 
             monitorInfoHandlesList.Clear();
 
@@ -414,15 +412,17 @@ namespace RefreshRateWpfApp
 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
-            IsMoreThenOneMonitor = _monitorInfoNamesList.Count > 1;
+            IsMoreThenOneMonitor = monitorsNewList.Count > 1;
 
-            SetProperDisplayNumberInPossibleRefreshrateList();
 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicationMode)));
 
-            if (!_monitorInfoNamesList.Select(a=>a.IdName).SequenceEqual(monitorsOldList.Select(a=>a.IdName)))
+            if (!_monitorInfoNamesList.Select(a=>a.IdName).SequenceEqual(monitorsNewList.Select(a=>a.IdName)))
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
-                {
+            {
+                _monitorInfoNamesList = monitorsNewList;
+
+                SetProperDisplayNumberInPossibleRefreshrateList();
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicationMode)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorsIdNameListString)));
             }
         }
