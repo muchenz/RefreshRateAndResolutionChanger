@@ -420,7 +420,7 @@ namespace RefreshRateWpfApp
                 _monitorInfoNamesList = monitorsNewList;
                 IsMoreThenOneMonitor = monitorsNewList.Count > 1;
                 SetProperDisplayNumberInPossibleRefreshrateList();
-                RefreshTryList();
+                SetTrayFromActualTryList();
 
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDuplicationMode)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MonitorsIdNameListString)));
@@ -520,23 +520,8 @@ namespace RefreshRateWpfApp
         }
         void SetTrayFromActualTryList()
         {
-            SetTryItemsFromCollection(_actualTryList);
-        }
-
-        void RefreshTryList()
-        {
-
-            //var list = new List<RefreshDataModel>();
-
-            //foreach (var item in ContextMenu.Items)
-            //{
-            //    if (item is MenuItem menuitem && menuitem?.Tag != null)
-            //    {
-            //        list.Add((RefreshDataModel)((MenuItem)item).Tag);
-
-            //    }
-            //}
-
+            _actualTryList.Sort(new RefreshDataModelComparer());
+            _actualTryList.Reverse();
             SetTryItemsFromCollection(_actualTryList);
         }
 
@@ -977,10 +962,10 @@ namespace RefreshRateWpfApp
                 return (int)(x.Width - y.Width);
             else if (x.Height - y.Height != 0)
                 return (int)(x.Height - y.Height);
-            else if (x.RefreshRate - y.RefreshRate != 0)
-                return (int)(x.RefreshRate - y.RefreshRate);
+            else if (string.Compare(x.MonitorDisplay, y.MonitorDisplay, StringComparison.Ordinal) != 0)
+                return string.Compare(y.MonitorDisplay, x.MonitorDisplay, StringComparison.Ordinal);
 
-            return string.Compare(y.MonitorDisplay, x.MonitorDisplay, StringComparison.Ordinal);
+            return (int)(x.RefreshRate - y.RefreshRate);
         }
     }
 
