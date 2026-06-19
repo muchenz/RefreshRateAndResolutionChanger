@@ -394,18 +394,32 @@ namespace RefreshRateWpfApp
 
         public ObservableCollection<RefreshDataModel> PossibleRefreshrateList => _posiibleRefreshrateList;
 
-        List<RefreshDataModel> _actualTryList =new List<RefreshDataModel>();
+        List<RefreshDataModel> _actualTryList = new List<RefreshDataModel>();
 
 
-        List<(IntPtr handle, MONITORINFOEXW info)> monitorInfoHandlesList = new List<(IntPtr handle, MONITORINFOEXW info)>();
+        List<MonitorDeviceInfo> monitorInfoHandlesList = new List<MonitorDeviceInfo>();
         public List<string> MonitorsIdNameListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
 
         public bool IsDuplicationMode => _monitorInfoNamesList.GroupBy(a => a.DisplayName).Any(a => a.Count() > 1);
-        private void SetMonitorsList()
-        {
-            List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
 
-            monitorInfoHandlesList.Clear();
+        public class MonitorDeviceInfo
+        {
+            public IntPtr Handle { get; set; }
+            public string SzDevice { get; set; }
+
+
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+
+
+        }
+
+        private List<MonitorDeviceInfo> GetmonitorInfoHandlesList()
+        {
+            //monitorInfoHandlesList.Clear();
+            var monitorInfoHandlesListTemp = new List<(IntPtr handle, MONITORINFOEXW info)>();
 
             bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
             {
@@ -414,15 +428,33 @@ namespace RefreshRateWpfApp
 
                 GetMonitorInfoW(hMonitor, ref info);
 
-                monitorInfoHandlesList.Add((hMonitor, info));
+                monitorInfoHandlesListTemp.Add((hMonitor, info));
                 return true;
             }
 
-
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
+            return monitorInfoHandlesListTemp.Select(a => new MonitorDeviceInfo
+            {
+                Handle = a.handle,
+                SzDevice = a.info.szDevice,
+                Bottom = a.info.rcMonitor.bottom,
+                Top = a.info.rcMonitor.top,
+                Left = a.info.rcMonitor.left,
+                Right = a.info.rcMonitor.right
+            }).ToList();
+        }
 
-            if (!_monitorInfoNamesList.Select(a=>a.IdName).SequenceEqual(monitorsNewList.Select(a=>a.IdName)))
+        private void SetMonitorsList()
+        {
+
+            //monitorInfoHandlesList.Clear();
+            monitorInfoHandlesList.AddRange(GetmonitorInfoHandlesList());
+
+
+            List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
+
+            if (!_monitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName)))
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
             {
                 _monitorInfoNamesList = monitorsNewList;
@@ -675,14 +707,14 @@ namespace RefreshRateWpfApp
 
             var targetDisplay = _monitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName).DisplayName;
 
-            var target = monitorInfoHandlesList.First(m => m.info.szDevice == targetDisplay);
+            var target = monitorInfoHandlesList.First(m => m.SzDevice == targetDisplay);
 
-            IntPtr hmonitor = target.handle;
+            IntPtr hmonitor = target.Handle;
 
-            var rectMon = target.info.rcMonitor;
+            //var rectMon = target.info.rcMonitor;
 
-            var width = rectMon.right - rectMon.left;
-            var height = rectMon.bottom - rectMon.top;
+            var width = target.Right - target.Left;
+            var height = target.Bottom - target.Top ;
 
             uint dpiX, dpiY;
             GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
@@ -717,8 +749,8 @@ namespace RefreshRateWpfApp
             Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
             //Popup.HorizontalOffset = offsetX;
             //Popup.VerticalOffset = offsetY;
-            Popup.HorizontalOffset = rectMon.left / dpiScaleX + offsetX;
-            Popup.VerticalOffset = rectMon.top / dpiScaleY + offsetY;
+            Popup.HorizontalOffset = target.Left / dpiScaleX + offsetX;
+            Popup.VerticalOffset = target.Top / dpiScaleY + offsetY;
 
             //////////////////////////////////
 
@@ -978,7 +1010,7 @@ namespace RefreshRateWpfApp
     }
 
 
-    public class RefreshDataModel:INotifyPropertyChanged
+    public class RefreshDataModel : INotifyPropertyChanged
     {
         public uint Width { get; set; }
         public uint Height { get; set; }
@@ -1048,7 +1080,7 @@ namespace RefreshRateWpfApp
 
         public static string ConvertMonitorName(string name)
         {
-            if (name.Length<4 || name[3]!=' ')
+            if (name.Length < 4 || name[3] != ' ')
             {
                 return name;
             }
