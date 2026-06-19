@@ -74,8 +74,10 @@ namespace RefreshRateAndResolutionChanger
             var dict = new Dictionary<string, string>();
 
             using (var searcher = new ManagementObjectSearcher(@"root\wmi", "SELECT * FROM WmiMonitorID"))
+            using (var results = searcher.Get())
             {
-                foreach (ManagementObject m in searcher.Get())
+
+                foreach (ManagementObject m in results)
                 {
                     string instanceName = m["InstanceName"].ToString();
 
