@@ -306,10 +306,8 @@ namespace RefreshRateWpfApp
         }
 
 
-        private void SetPossibleRefreshRateList(bool allResolution = false)
+        private List<RefreshDataModel> GetRsolutionAndRefresrate(bool allResolution = false)
         {
-
-
             var actualMonSet = GetActualResolutionAndRefresRate();
             uint i = 0;
             //PosiibleRefreshrateList.Clear();
@@ -350,6 +348,16 @@ namespace RefreshRateWpfApp
                     temPList.Add(t);
                 }
             }
+            return temPList;
+        }
+
+        private void SetPossibleRefreshRateList(bool allResolution = false)
+        {
+
+            var temPList = GetRsolutionAndRefresrate(allResolution);
+
+            //-------------------
+
 
             var newList = new List<RefreshDataModel>();
 
