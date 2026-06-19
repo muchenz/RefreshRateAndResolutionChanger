@@ -112,25 +112,26 @@ namespace RefreshRateWpfApp
 
         void SetRunSatartup()
         {
-           using( Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser
-                .OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser
+                 .OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
 
-            if (reg == null) return;
-            var key2 = reg.GetValue("RefreshRateApp");
-            if (_runStartup)
-            {
-                reg.SetValue("RefreshRateApp", Process.GetCurrentProcess().MainModule.FileName);
+                if (reg == null) return;
+                var key2 = reg.GetValue("RefreshRateApp");
+                if (_runStartup)
+                {
+                    reg.SetValue("RefreshRateApp", Process.GetCurrentProcess().MainModule.FileName);
+                }
+                else
+                {
+                    var key = reg.GetValue("RefreshRateApp");
+                    if (key == null) return;
+
+                    reg.DeleteValue("RefreshRateApp");
+
+                }
+                reg.Close();
             }
-            else
-            {
-                var key = reg.GetValue("RefreshRateApp");
-                if (key == null) return;
-
-                reg.DeleteValue("RefreshRateApp");
-
-            }
-            reg.Close();
 
         }
 
@@ -527,9 +528,23 @@ namespace RefreshRateWpfApp
 
             // znajdź DISPLAY
 
-            var targetDisplay = MonitorState.MonitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName).DisplayName;
+            var targetDisplay = MonitorState.MonitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName)?.DisplayName;
 
-            var target = MonitorState.MonitorInfoHandlesList.First(m => m.SzDevice == targetDisplay);
+            if (string.IsNullOrEmpty(targetDisplay))
+            {
+                MessageBox.Show("Some error. Monitor not found.");
+                StackPanelAll.IsEnabled = true;
+                return;
+            }
+
+            var target = MonitorState.MonitorInfoHandlesList.FirstOrDefault(m => m.SzDevice == targetDisplay);
+
+            if (target == null)
+            {
+                MessageBox.Show("Some error. Monitor handle not found.");
+                StackPanelAll.IsEnabled = true;
+                return;
+            }
 
             IntPtr hmonitor = target.Handle;
 
@@ -633,8 +648,9 @@ namespace RefreshRateWpfApp
 
             var monitorD = split1[2].Trim();
             var monitorN = split1[3].Trim();
-            var refS = split1[1].Substring(0, split1[1].Length - 3).Trim();
-
+            //var refS = split1[1].Substring(0, split1[1].Length - 3).Trim();
+            var refS = split1[1].Replace("Hz", "").Trim();
+            
             var refU = uint.Parse(refS);
 
             var heightU = uint.Parse(split1[0].Split('x')[1].Trim());
