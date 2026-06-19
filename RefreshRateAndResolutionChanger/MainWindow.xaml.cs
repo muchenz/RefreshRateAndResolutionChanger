@@ -112,8 +112,9 @@ namespace RefreshRateWpfApp
 
         void SetRunSatartup()
         {
-            Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser
-                .OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+           using( Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser
+                .OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            {
 
             if (reg == null) return;
             var key2 = reg.GetValue("RefreshRateApp");
@@ -175,7 +176,7 @@ namespace RefreshRateWpfApp
             RadioButtinAcualResMode.IsChecked = !RadioButtinAllResMode.IsChecked;
             DirtySetting = false;
 
-            monitorDeviceSzLast = WinApiWrapper.GetMonitorSzDevice();
+            MonitorState.MonitorDeviceSzLast = WinApiWrapper.GetMonitorSzDevice();
 
             SystemEvents.DisplaySettingsChanged += (s, e) =>
             {
@@ -186,16 +187,16 @@ namespace RefreshRateWpfApp
                 OnTimerTick(s, e);
             };
         }
-        List<MonitorInfo> _monitorInfoNamesList = new List<MonitorInfo>();
+        //List<MonitorInfo> _monitorInfoNamesList = new List<MonitorInfo>();
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
 
             var actualMonitor = WinApiWrapper.GetMonitorSzDevice();
-            if (monitorDeviceSzLast == actualMonitor)
+            if (MonitorState.MonitorDeviceSzLast == actualMonitor)
             {
                 return;
             }
-            monitorDeviceSzLast = actualMonitor;
+            MonitorState.MonitorDeviceSzLast = actualMonitor;
             OnTimerTick(sender, e);
         }
 
@@ -206,7 +207,7 @@ namespace RefreshRateWpfApp
         private unsafe void OnTimerTick(object sender, object e)
         {
 
-            var actualSetting =  WinApiWrapper.GetActualResolutionAndRefresRate();
+            var actualSetting = WinApiWrapper.GetActualResolutionAndRefresRate();
 
             if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0]
                 && actualSetting.MonitorIdName == ((RefreshDataModel)header.Tag).MonitorIdName)
@@ -220,16 +221,6 @@ namespace RefreshRateWpfApp
             }
         }
 
-  
-
-
-        string monitorDeviceSzLast;
-
-        
-      
-
-
-       
 
         private void SetPossibleRefreshRateList(bool allResolution = false)
         {
@@ -277,10 +268,10 @@ namespace RefreshRateWpfApp
         List<RefreshDataModel> _actualTryList = new List<RefreshDataModel>();
 
 
-        List<MonitorDeviceInfo> monitorInfoHandlesList = new List<MonitorDeviceInfo>();
-        public List<string> MonitorsIdNameListString => _monitorInfoNamesList.Select(a => a.IdName).ToList();
+        //List<MonitorDeviceInfo> monitorInfoHandlesList = new List<MonitorDeviceInfo>();
+        public List<string> MonitorsIdNameListString => MonitorState.MonitorInfoNamesList.Select(a => a.IdName).ToList();
 
-        public bool IsDuplicationMode => _monitorInfoNamesList.GroupBy(a => a.DisplayName).Any(a => a.Count() > 1);
+        public bool IsDuplicationMode => MonitorState.MonitorInfoNamesList.GroupBy(a => a.DisplayName).Any(a => a.Count() > 1);
 
         public class MonitorDeviceInfo
         {
@@ -295,22 +286,25 @@ namespace RefreshRateWpfApp
 
         }
 
-        
+
 
         private void SetMonitorsList()
         {
 
             //monitorInfoHandlesList.Clear();
-            monitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
+            MonitorState.MonitorInfoHandlesList.Clear();
+            MonitorState.MonitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
 
 
             List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
 
-            if (!_monitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName)))
+            if (!MonitorState.MonitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName)))
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
             {
-                _monitorInfoNamesList = monitorsNewList;                    
-                WinApiWrapper.MonitorInfoNamesList = _monitorInfoNamesList; //must the same 
+                // _monitorInfoNamesList = monitorsNewList;
+                // WinApiWrapper.MonitorInfoNamesList = _monitorInfoNamesList; //must the same 
+
+                MonitorState.MonitorInfoNamesList = monitorsNewList;
 
                 IsMoreThenOneMonitor = monitorsNewList.Count > 1;
                 SetProperDisplayNumberInPossibleRefreshrateList();
@@ -324,14 +318,14 @@ namespace RefreshRateWpfApp
         {
             foreach (var item in PossibleRefreshrateList)
             {
-                var monitor = _monitorInfoNamesList.FirstOrDefault(a => a.IdName == item.MonitorIdName);
+                var monitor = MonitorState.MonitorInfoNamesList.FirstOrDefault(a => a.IdName == item.MonitorIdName);
                 if (monitor != null)
                 {
                     item.MonitorDisplay = monitor.DisplayName;
                 }
             }
         }
-       
+
 
 
 
@@ -410,7 +404,7 @@ namespace RefreshRateWpfApp
                     //    continue;
                     //}
 
-                    if (!_monitorInfoNamesList.Select(a => a.IdName).Contains(item.MonitorIdName))
+                    if (!MonitorState.MonitorInfoNamesList.Select(a => a.IdName).Contains(item.MonitorIdName))
                     {
                         continue;
                     }
@@ -533,16 +527,16 @@ namespace RefreshRateWpfApp
 
             // znajdź DISPLAY
 
-            var targetDisplay = _monitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName).DisplayName;
+            var targetDisplay = MonitorState.MonitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName).DisplayName;
 
-            var target = monitorInfoHandlesList.First(m => m.SzDevice == targetDisplay);
+            var target = MonitorState.MonitorInfoHandlesList.First(m => m.SzDevice == targetDisplay);
 
             IntPtr hmonitor = target.Handle;
 
             //var rectMon = target.info.rcMonitor;
 
             var width = target.Right - target.Left;
-            var height = target.Bottom - target.Top ;
+            var height = target.Bottom - target.Top;
 
             (uint dpiX, uint dpiY) = WinApiWrapper.GetDpiForMonitor(hmonitor);
             //GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
@@ -1259,13 +1253,18 @@ namespace RefreshRateWpfApp
 };
     }
 
+    public class MonitorState
+    {
+        public static List<MonitorInfo> MonitorInfoNamesList = new List<MonitorInfo>();
+        public static List<MonitorDeviceInfo> MonitorInfoHandlesList = new List<MonitorDeviceInfo>();
+        public static string MonitorDeviceSzLast;
 
-
+    }
 
     public class WinApiWrapper 
     {
 
-        public static List<MonitorInfo> MonitorInfoNamesList = new List<MonitorInfo>();
+        public static MonitorState MonitorState;
 
         public static Window WindowReference;
 
@@ -1332,7 +1331,7 @@ namespace RefreshRateWpfApp
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
                 MonitorDisplay = monitorInfo.szDevice,
-                MonitorIdName = MonitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).IdName
+                MonitorIdName = MonitorState.MonitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).IdName
             };
 
             // Done!
@@ -1354,7 +1353,7 @@ namespace RefreshRateWpfApp
                 Height = devMode.dmPelsHeight,
                 Width = devMode.dmPelsWidth,
                 MonitorDisplay = display,
-                MonitorIdName = MonitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).IdName
+                MonitorIdName = MonitorState.MonitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).IdName
             };
 
             // Done!
@@ -1611,7 +1610,6 @@ namespace RefreshRateWpfApp
         }
 
     }
-
 
 }
 
