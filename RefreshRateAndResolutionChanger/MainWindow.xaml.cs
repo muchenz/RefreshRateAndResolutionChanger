@@ -25,6 +25,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using static RefreshRateWpfApp.MainWindow;
 
 namespace RefreshRateWpfApp
 {
@@ -134,7 +135,7 @@ namespace RefreshRateWpfApp
 
         void SetWindowHeight()
         {
-            var actualSetting = GetActualResolutionAndRefresRate();
+            var actualSetting = WinApiWrapper.GetActualResolutionAndRefresRate();
             if (actualSetting.Height > 850) return;
 
             this.Height -= 100;
@@ -142,6 +143,8 @@ namespace RefreshRateWpfApp
 
         public MainWindow()
         {
+            WinApiWrapper.WindowReference = this;
+
             InitializeComponent();
             SetMonitorsList();
             SetWindowHeight();
@@ -172,7 +175,7 @@ namespace RefreshRateWpfApp
             RadioButtinAcualResMode.IsChecked = !RadioButtinAllResMode.IsChecked;
             DirtySetting = false;
 
-            monitorDeviceSzLast = GetMonitorSzDevice();
+            monitorDeviceSzLast = WinApiWrapper.GetMonitorSzDevice();
 
             SystemEvents.DisplaySettingsChanged += (s, e) =>
             {
@@ -187,7 +190,7 @@ namespace RefreshRateWpfApp
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
 
-            var actualMonitor = GetMonitorSzDevice();
+            var actualMonitor = WinApiWrapper.GetMonitorSzDevice();
             if (monitorDeviceSzLast == actualMonitor)
             {
                 return;
@@ -203,7 +206,7 @@ namespace RefreshRateWpfApp
         private unsafe void OnTimerTick(object sender, object e)
         {
 
-            var actualSetting = GetActualResolutionAndRefresRate();
+            var actualSetting =  WinApiWrapper.GetActualResolutionAndRefresRate();
 
             if (actualSetting.FullName.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0]
                 && actualSetting.MonitorIdName == ((RefreshDataModel)header.Tag).MonitorIdName)
@@ -217,150 +220,21 @@ namespace RefreshRateWpfApp
             }
         }
 
-        [DllImport("user32.dll")]
-        static extern bool EnumDisplayMonitors(
-                IntPtr hdc,
-                IntPtr lprcClip,
-                MonitorEnumProc lpfnEnum,
-                IntPtr dwData);
-
-        delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
+  
 
 
         string monitorDeviceSzLast;
 
-        string GetMonitorSzDevice()
-        {
-            var monitorInfo = GetMONITORINFOEXW();
-            return monitorInfo.szDevice;
-        }
-        MONITORINFOEXW GetMONITORINFOEXW()
-        {
-            // 1. Get the window handle ("HWND" in Win32 parlance)
-            WindowInteropHelper helper = new WindowInteropHelper(this);
-            IntPtr hwnd = helper.Handle;
-
-            // 2. Get a monitor handle ("HMONITOR") for the window. 
-            //    If the window is straddling more than one monitor, Windows will pick the "best" one.
-            IntPtr hmonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-            if (hmonitor == IntPtr.Zero)
-            {
-                throw new Exception("MonitorFromWindow returned NULL ☹");
-            }
-
-            // 3. Get more information about the monitor.
-            var monitorInfo = new MONITORINFOEXW();
-            monitorInfo.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
-
-            bool bResult = GetMonitorInfoW(hmonitor, ref monitorInfo);
-            if (!bResult)
-            {
-                throw new Exception("GetMonitorInfoW returned FALSE ☹");
-            }
-
-            // 4. Get the current display settings for that monitor, which includes the resolution and refresh rate.
-            //devMode = new DEVMODEW();
-            //devMode.dmSize = (ushort)Marshal.SizeOf<DEVMODEW>();
-
-            return monitorInfo;
-        }
+        
+      
 
 
-        private RefreshDataModel GetActualResolutionAndRefresRate()
-        {
-            var monitorInfo = GetMONITORINFOEXW();
-
-            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out var devMode);
-            if (!bResult)
-            {
-                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
-            }
-
-            var currentSetting = new RefreshDataModel
-            {
-                RefreshRate = devMode.dmDisplayFrequency,
-                Height = devMode.dmPelsHeight,
-                Width = devMode.dmPelsWidth,
-                MonitorDisplay = monitorInfo.szDevice,
-                MonitorIdName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).IdName
-            };
-
-            // Done!
-            return currentSetting;
-        }
-
-        private RefreshDataModel GetActualResolutionAndRefresRateFromMonitor(string display)
-        {
-
-            bool bResult = EnumDisplaySettingsW(display, ENUM_CURRENT_SETTINGS, out var devMode);
-            if (!bResult)
-            {
-                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
-            }
-
-            var currentSetting = new RefreshDataModel
-            {
-                RefreshRate = devMode.dmDisplayFrequency,
-                Height = devMode.dmPelsHeight,
-                Width = devMode.dmPelsWidth,
-                MonitorDisplay = display,
-                MonitorIdName = _monitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).IdName
-            };
-
-            // Done!
-            return currentSetting;
-        }
-
-
-        private List<RefreshDataModel> GetRsolutionAndRefresrate(bool allResolution = false)
-        {
-            var actualMonSet = GetActualResolutionAndRefresRate();
-            uint i = 0;
-            //PosiibleRefreshrateList.Clear();
-
-            List<RefreshDataModel> temPList = new List<RefreshDataModel>();
-
-            string actualResolitionandRefresh = string.Format("{0} x {1} @ {2}Hz",
-                            actualMonSet.Width, actualMonSet.Height, actualMonSet.RefreshRate);
-
-
-            while (EnumDisplaySettingsW(actualMonSet.MonitorDisplay, i++, out var devMode))
-            {
-
-                if (allResolution || (actualMonSet.Width == devMode.dmPelsWidth && actualMonSet.Height == devMode.dmPelsHeight))
-                {
-                    var t = new RefreshDataModel
-                    {
-                        RefreshRate = devMode.dmDisplayFrequency
-                    ,
-                        Height = devMode.dmPelsHeight,
-                        Width = devMode.dmPelsWidth,
-                        MonitorDisplay = actualMonSet.MonitorDisplay,
-                        MonitorIdName = actualMonSet.MonitorIdName
-                    };
-
-                    //probably to remove this if statement (this cause lost choosed item when resolution changes)
-                    //if (actualResolitionandRefresh.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
-                    //{
-
-                    //var item = PosiibleRefreshrateList.Where(a => a.RefreshRate == devMode.dmDisplayFrequency
-                    //&& a.Width == devMode.dmPelsWidth && a.Height == devMode.dmPelsHeight && a.Monitor == monitorInfo.szDevice).FirstOrDefault();
-                    //if (item != null && item.Choosed)
-                    //{
-                    //    t.Choosed = true;
-                    //}
-                    //}
-
-                    temPList.Add(t);
-                }
-            }
-            return temPList;
-        }
+       
 
         private void SetPossibleRefreshRateList(bool allResolution = false)
         {
 
-            var temPList = GetRsolutionAndRefresrate(allResolution);
+            var temPList = WinApiWrapper.GetRsolutionAndRefresrate(allResolution);
 
             //-------------------
 
@@ -421,40 +295,13 @@ namespace RefreshRateWpfApp
 
         }
 
-        private List<MonitorDeviceInfo> GetMonitorInfoHandlesList()
-        {
-            //monitorInfoHandlesList.Clear();
-            var monitorInfoHandlesListTemp = new List<(IntPtr handle, MONITORINFOEXW info)>();
-
-            bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
-            {
-                var info = new MONITORINFOEXW();
-                info.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
-
-                GetMonitorInfoW(hMonitor, ref info);
-
-                monitorInfoHandlesListTemp.Add((hMonitor, info));
-                return true;
-            }
-
-            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
-
-            return monitorInfoHandlesListTemp.Select(a => new MonitorDeviceInfo
-            {
-                Handle = a.handle,
-                SzDevice = a.info.szDevice,
-                Bottom = a.info.rcMonitor.bottom,
-                Top = a.info.rcMonitor.top,
-                Left = a.info.rcMonitor.left,
-                Right = a.info.rcMonitor.right
-            }).ToList();
-        }
+        
 
         private void SetMonitorsList()
         {
 
             //monitorInfoHandlesList.Clear();
-            monitorInfoHandlesList.AddRange(GetMonitorInfoHandlesList());
+            monitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
 
 
             List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
@@ -462,7 +309,9 @@ namespace RefreshRateWpfApp
             if (!_monitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName)))
             //if (monitorInfoHandlesList.Count != monitorsOldCount)
             {
-                _monitorInfoNamesList = monitorsNewList;
+                _monitorInfoNamesList = monitorsNewList;                    
+                WinApiWrapper.MonitorInfoNamesList = _monitorInfoNamesList; //must the same 
+
                 IsMoreThenOneMonitor = monitorsNewList.Count > 1;
                 SetProperDisplayNumberInPossibleRefreshrateList();
                 SetTrayFromActualTryList();
@@ -482,33 +331,7 @@ namespace RefreshRateWpfApp
                 }
             }
         }
-        private int SetResolutionAndFrequerency(RefreshDataModel settingsToSet)
-        {
-
-            // var (width, height, refresh, monitor) = GetResAndFreqAndMonitorFromString(settingsToSet);
-
-            bool bResult = EnumDisplaySettingsW(settingsToSet.MonitorDisplay, ENUM_CURRENT_SETTINGS, out var devMode);
-            if (!bResult)
-            {
-                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
-            }
-
-            devMode.dmPelsWidth = settingsToSet.Width;
-            devMode.dmPelsHeight = settingsToSet.Height;
-
-            //devMode.dmBitsPerPel = (uint)32;
-            devMode.dmDisplayFrequency = settingsToSet.RefreshRate;
-            //devMode.dmFields = 0x00400000;
-            devMode.dmFields = 0x00080000 | 0x00100000 | 0x00400000;
-            //ChangeDisplaySettingsW(ref devMode, 0);
-            //ChangeDisplaySettingsW(ref devMode, 0);
-            var res = ChangeDisplaySettingsExW(settingsToSet.MonitorDisplay, ref devMode, IntPtr.Zero, 0, IntPtr.Zero);
-
-            // szDevice id string eg "\\\\.\\DISPLAY2" for secod monitor
-
-            // Done!
-            return res;
-        }
+       
 
 
 
@@ -604,7 +427,7 @@ namespace RefreshRateWpfApp
                     menuItem.Click += (a, b) =>
                     {
                         //SetFrequerency(uint.Parse(((MenuItem)a).Tag.ToString()));
-                        SetResolutionAndFrequerency((RefreshDataModel)((MenuItem)a).Tag);
+                        WinApiWrapper.SetResolutionAndFrequerency((RefreshDataModel)((MenuItem)a).Tag);
 
                     };
                     ContextMenu.Items.Add(menuItem);
@@ -689,11 +512,11 @@ namespace RefreshRateWpfApp
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
             var resSettings = (RefreshDataModel)((Button)sender).DataContext;
-            var actualRefreshAndResolution = GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay);
+            var actualRefreshAndResolution = WinApiWrapper.GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay);
 
 
-            SetResolutionAndFrequerency(resSettings);
-            var splitInfo = GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay)
+            WinApiWrapper.SetResolutionAndFrequerency(resSettings);
+            var splitInfo = WinApiWrapper.GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay)
                 .FullNameWithMonitorDisplayAndName.Split('@');
 
             var infoString1 = splitInfo[0].Trim() + " @ " + splitInfo[1].Trim();
@@ -721,7 +544,7 @@ namespace RefreshRateWpfApp
             var width = target.Right - target.Left;
             var height = target.Bottom - target.Top ;
 
-            (uint dpiX, uint dpiY) = GetDpiForMonitor(hmonitor);
+            (uint dpiX, uint dpiY) = WinApiWrapper.GetDpiForMonitor(hmonitor);
             //GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
 
             var dpiScaleX = dpiX / 96.0;
@@ -778,15 +601,15 @@ namespace RefreshRateWpfApp
 
             StackPanelAll.IsEnabled = true;
 
-            SetResolutionAndFrequerency(actualRefreshAndResolution);
+            WinApiWrapper.SetResolutionAndFrequerency(actualRefreshAndResolution);
 
-            SetLabelRefreshRateAndHeader(GetActualResolutionAndRefresRate());
+            SetLabelRefreshRateAndHeader(WinApiWrapper.GetActualResolutionAndRefresRate());
             Popup.IsOpen = false;
         }
 
         void Refresh_RefreshText()
         {
-            var actualSetting = GetActualResolutionAndRefresRate();
+            var actualSetting = WinApiWrapper.GetActualResolutionAndRefresRate();
             SetLabelRefreshRateAndHeader(actualSetting);
             SetPossibleRefreshRateList(AllResolutionMode);
         }
@@ -802,7 +625,7 @@ namespace RefreshRateWpfApp
 
         void SetActalRefreshRateAndHeaderLabel()
         {
-            var RefreshRate = GetActualResolutionAndRefresRate();
+            var RefreshRate = WinApiWrapper.GetActualResolutionAndRefresRate();
 
             SetLabelRefreshRateAndHeader(RefreshRate);
         }
@@ -861,151 +684,6 @@ namespace RefreshRateWpfApp
 
         //---------------------------------------------------
 
-        // MonitorFromWindow
-        private const uint MONITOR_DEFAULTTONEAREST = 2;
-
-        [DllImport("user32.dll", SetLastError = false)]
-        private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int ChangeDisplaySettingsExW(
-            string lpszDeviceName,
-            ref DEVMODEW lpDevMode,
-            IntPtr hwnd,
-            int dwflags,
-            IntPtr lParam
-        );
-
-        [DllImport("User32.dll")]
-        [return: MarshalAs(UnmanagedType.I4)]
-        private static extern int ChangeDisplaySettingsW(
-            [In, Out]
-        ref DEVMODEW lpDevMode,
-            [param: MarshalAs(UnmanagedType.U4)]
-        uint dwflags);
-
-        // RECT
-        [StructLayout(LayoutKind.Sequential)]
-        private struct RECT
-        {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
-        }
-
-        // MONITORINFOEX
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        private unsafe struct MONITORINFOEXW
-        {
-            public uint cbSize;
-            public RECT rcMonitor;
-            public RECT rcWork;
-            public uint dwFlags;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string szDevice;
-        }
-
-        // GetMonitorInfo
-        [DllImport("user32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool GetMonitorInfoW(
-            IntPtr hMonitor,
-            ref MONITORINFOEXW lpmi);
-
-        // EnumDisplaySettings
-        private const uint ENUM_CURRENT_SETTINGS = unchecked((uint)-1);
-
-
-
-        [DllImport("user32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool EnumDisplaySettingsW(
-            [MarshalAs(UnmanagedType.LPWStr)] string lpszDeviceName,
-            uint iModeNum,
-            out DEVMODEW lpDevMode);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        private struct DEVMODEW
-        {
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string dmDeviceName;
-
-            public ushort dmSpecVersion;
-            public ushort dmDriverVersion;
-            public ushort dmSize;
-            public ushort dmDriverExtra;
-            public uint dmFields;
-
-            /*public short dmOrientation;
-            public short dmPaperSize;
-            public short dmPaperLength;
-            public short dmPaperWidth;
-            public short dmScale;
-            public short dmCopies;
-            public short dmDefaultSource;
-            public short dmPrintQuality;*/
-            // These next 4 int fields are a union with the above 8 shorts, but we don't need them right now
-            public int dmPositionX;
-            public int dmPositionY;
-            public uint dmDisplayOrientation;
-            public uint dmDisplayFixedOutput;
-
-            public short dmColor;
-            public short dmDuplex;
-            public short dmYResolution;
-            public short dmTTOption;
-            public short dmCollate;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string dmFormName;
-
-            public short dmLogPixels;
-            public uint dmBitsPerPel;
-            public uint dmPelsWidth;
-            public uint dmPelsHeight;
-
-            public uint dmNupOrDisplayFlags;
-            public uint dmDisplayFrequency;
-
-            public uint dmICMMethod;
-            public uint dmICMIntent;
-            public uint dmMediaType;
-            public uint dmDitherType;
-            public uint dmReserved1;
-            public uint dmReserved2;
-            public uint dmPanningWidth;
-            public uint dmPanningHeight;
-        }
-
-        public (uint dpiX, uint dpiY) GetDpiForMonitor(IntPtr hmonitor)
-        {
-            uint dpiX, dpiY;
-            var res = GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI,  out dpiX, out dpiY);
-            
-            if (res != 0)
-            {
-                throw new Exception($"GetDpiForMonitor failed with error code {res}");
-            }
-
-            return (dpiX, dpiY);
-
-        }
-
-        [DllImport("Shcore.dll")]
-        static extern int GetDpiForMonitor(
-             IntPtr hmonitor,
-             MonitorDpiType dpiType,
-             out uint dpiX,
-             out uint dpiY);
-
-        enum MonitorDpiType
-        {
-            MDT_EFFECTIVE_DPI = 0,
-            MDT_ANGULAR_DPI = 1,
-            MDT_RAW_DPI = 2
-        }
 
 
 
@@ -1580,6 +1258,360 @@ namespace RefreshRateWpfApp
 
 };
     }
+
+
+
+
+    public class WinApiWrapper 
+    {
+
+        public static List<MonitorInfo> MonitorInfoNamesList = new List<MonitorInfo>();
+
+        public static Window WindowReference;
+
+
+        [DllImport("user32.dll")]
+        static extern bool EnumDisplayMonitors(
+          IntPtr hdc,
+          IntPtr lprcClip,
+          MonitorEnumProc lpfnEnum,
+          IntPtr dwData);
+
+        delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
+        public static string GetMonitorSzDevice()
+        {
+            var monitorInfo = GetMONITORINFOEXW();
+            return monitorInfo.szDevice;
+        }
+
+        static MONITORINFOEXW GetMONITORINFOEXW()
+        {
+            // 1. Get the window handle ("HWND" in Win32 parlance)
+            WindowInteropHelper helper = new WindowInteropHelper(WindowReference);
+            IntPtr hwnd = helper.Handle;
+
+            // 2. Get a monitor handle ("HMONITOR") for the window. 
+            //    If the window is straddling more than one monitor, Windows will pick the "best" one.
+            IntPtr hmonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            if (hmonitor == IntPtr.Zero)
+            {
+                throw new Exception("MonitorFromWindow returned NULL ☹");
+            }
+
+            // 3. Get more information about the monitor.
+            var monitorInfo = new MONITORINFOEXW();
+            monitorInfo.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
+
+            bool bResult = GetMonitorInfoW(hmonitor, ref monitorInfo);
+            if (!bResult)
+            {
+                throw new Exception("GetMonitorInfoW returned FALSE ☹");
+            }
+
+            // 4. Get the current display settings for that monitor, which includes the resolution and refresh rate.
+            //devMode = new DEVMODEW();
+            //devMode.dmSize = (ushort)Marshal.SizeOf<DEVMODEW>();
+
+            return monitorInfo;
+        }
+
+
+        public static  RefreshDataModel GetActualResolutionAndRefresRate()
+        {
+            var monitorInfo = GetMONITORINFOEXW();
+
+            bool bResult = EnumDisplaySettingsW(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, out var devMode);
+            if (!bResult)
+            {
+                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
+            }
+
+            var currentSetting = new RefreshDataModel
+            {
+                RefreshRate = devMode.dmDisplayFrequency,
+                Height = devMode.dmPelsHeight,
+                Width = devMode.dmPelsWidth,
+                MonitorDisplay = monitorInfo.szDevice,
+                MonitorIdName = MonitorInfoNamesList.FirstOrDefault(a => a.DisplayName == monitorInfo.szDevice).IdName
+            };
+
+            // Done!
+            return currentSetting;
+        }
+
+        public static RefreshDataModel GetActualResolutionAndRefresRateFromMonitor(string display)
+        {
+
+            bool bResult = EnumDisplaySettingsW(display, ENUM_CURRENT_SETTINGS, out var devMode);
+            if (!bResult)
+            {
+                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
+            }
+
+            var currentSetting = new RefreshDataModel
+            {
+                RefreshRate = devMode.dmDisplayFrequency,
+                Height = devMode.dmPelsHeight,
+                Width = devMode.dmPelsWidth,
+                MonitorDisplay = display,
+                MonitorIdName = MonitorInfoNamesList.FirstOrDefault(a => a.DisplayName == display).IdName
+            };
+
+            // Done!
+            return currentSetting;
+        }
+
+        public static  List<RefreshDataModel> GetRsolutionAndRefresrate(bool allResolution = false)
+        {
+            var actualMonSet = GetActualResolutionAndRefresRate();
+            uint i = 0;
+            //PosiibleRefreshrateList.Clear();
+
+            List<RefreshDataModel> temPList = new List<RefreshDataModel>();
+
+            string actualResolitionandRefresh = string.Format("{0} x {1} @ {2}Hz",
+                            actualMonSet.Width, actualMonSet.Height, actualMonSet.RefreshRate);
+
+
+            while (EnumDisplaySettingsW(actualMonSet.MonitorDisplay, i++, out var devMode))
+            {
+
+                if (allResolution || (actualMonSet.Width == devMode.dmPelsWidth && actualMonSet.Height == devMode.dmPelsHeight))
+                {
+                    var t = new RefreshDataModel
+                    {
+                        RefreshRate = devMode.dmDisplayFrequency
+                    ,
+                        Height = devMode.dmPelsHeight,
+                        Width = devMode.dmPelsWidth,
+                        MonitorDisplay = actualMonSet.MonitorDisplay,
+                        MonitorIdName = actualMonSet.MonitorIdName
+                    };
+
+                    //probably to remove this if statement (this cause lost choosed item when resolution changes)
+                    //if (actualResolitionandRefresh.Split('@')[0] == this.textBlockActualRefreshRate.Text.Split('@')[0])
+                    //{
+
+                    //var item = PosiibleRefreshrateList.Where(a => a.RefreshRate == devMode.dmDisplayFrequency
+                    //&& a.Width == devMode.dmPelsWidth && a.Height == devMode.dmPelsHeight && a.Monitor == monitorInfo.szDevice).FirstOrDefault();
+                    //if (item != null && item.Choosed)
+                    //{
+                    //    t.Choosed = true;
+                    //}
+                    //}
+
+                    temPList.Add(t);
+                }
+            }
+            return temPList;
+        }
+
+        public static List<MonitorDeviceInfo> GetMonitorInfoHandlesList()
+        {
+            //monitorInfoHandlesList.Clear();
+            var monitorInfoHandlesListTemp = new List<(IntPtr handle, MONITORINFOEXW info)>();
+
+            bool Callback(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data2)
+            {
+                var info = new MONITORINFOEXW();
+                info.cbSize = (uint)Marshal.SizeOf<MONITORINFOEXW>();
+
+                GetMonitorInfoW(hMonitor, ref info);
+
+                monitorInfoHandlesListTemp.Add((hMonitor, info));
+                return true;
+            }
+
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
+
+            return monitorInfoHandlesListTemp.Select(a => new MonitorDeviceInfo
+            {
+                Handle = a.handle,
+                SzDevice = a.info.szDevice,
+                Bottom = a.info.rcMonitor.bottom,
+                Top = a.info.rcMonitor.top,
+                Left = a.info.rcMonitor.left,
+                Right = a.info.rcMonitor.right
+            }).ToList();
+        }
+
+        public static int SetResolutionAndFrequerency(RefreshDataModel settingsToSet)
+        {
+
+            // var (width, height, refresh, monitor) = GetResAndFreqAndMonitorFromString(settingsToSet);
+
+            bool bResult = EnumDisplaySettingsW(settingsToSet.MonitorDisplay, ENUM_CURRENT_SETTINGS, out var devMode);
+            if (!bResult)
+            {
+                throw new Exception("EnumDisplaySettingsW returned FALSE ☹");
+            }
+
+            devMode.dmPelsWidth = settingsToSet.Width;
+            devMode.dmPelsHeight = settingsToSet.Height;
+
+            //devMode.dmBitsPerPel = (uint)32;
+            devMode.dmDisplayFrequency = settingsToSet.RefreshRate;
+            //devMode.dmFields = 0x00400000;
+            devMode.dmFields = 0x00080000 | 0x00100000 | 0x00400000;
+            //ChangeDisplaySettingsW(ref devMode, 0);
+            //ChangeDisplaySettingsW(ref devMode, 0);
+            var res = ChangeDisplaySettingsExW(settingsToSet.MonitorDisplay, ref devMode, IntPtr.Zero, 0, IntPtr.Zero);
+
+            // szDevice id string eg "\\\\.\\DISPLAY2" for secod monitor
+
+            // Done!
+            return res;
+        }
+
+
+        // MonitorFromWindow
+        private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+        [DllImport("user32.dll", SetLastError = false)]
+        private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int ChangeDisplaySettingsExW(
+            string lpszDeviceName,
+            ref DEVMODEW lpDevMode,
+            IntPtr hwnd,
+            int dwflags,
+            IntPtr lParam
+        );
+
+        [DllImport("User32.dll")]
+        [return: MarshalAs(UnmanagedType.I4)]
+        private static extern int ChangeDisplaySettingsW(
+            [In, Out]
+        ref DEVMODEW lpDevMode,
+            [param: MarshalAs(UnmanagedType.U4)]
+        uint dwflags);
+
+        // RECT
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+
+        // MONITORINFOEX
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private unsafe struct MONITORINFOEXW
+        {
+            public uint cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string szDevice;
+        }
+
+        // GetMonitorInfo
+        [DllImport("user32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetMonitorInfoW(
+            IntPtr hMonitor,
+            ref MONITORINFOEXW lpmi);
+
+        // EnumDisplaySettings
+        private const uint ENUM_CURRENT_SETTINGS = unchecked((uint)-1);
+
+
+
+        [DllImport("user32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnumDisplaySettingsW(
+            [MarshalAs(UnmanagedType.LPWStr)] string lpszDeviceName,
+            uint iModeNum,
+            out DEVMODEW lpDevMode);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct DEVMODEW
+        {
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string dmDeviceName;
+
+            public ushort dmSpecVersion;
+            public ushort dmDriverVersion;
+            public ushort dmSize;
+            public ushort dmDriverExtra;
+            public uint dmFields;
+
+            /*public short dmOrientation;
+            public short dmPaperSize;
+            public short dmPaperLength;
+            public short dmPaperWidth;
+            public short dmScale;
+            public short dmCopies;
+            public short dmDefaultSource;
+            public short dmPrintQuality;*/
+            // These next 4 int fields are a union with the above 8 shorts, but we don't need them right now
+            public int dmPositionX;
+            public int dmPositionY;
+            public uint dmDisplayOrientation;
+            public uint dmDisplayFixedOutput;
+
+            public short dmColor;
+            public short dmDuplex;
+            public short dmYResolution;
+            public short dmTTOption;
+            public short dmCollate;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string dmFormName;
+
+            public short dmLogPixels;
+            public uint dmBitsPerPel;
+            public uint dmPelsWidth;
+            public uint dmPelsHeight;
+
+            public uint dmNupOrDisplayFlags;
+            public uint dmDisplayFrequency;
+
+            public uint dmICMMethod;
+            public uint dmICMIntent;
+            public uint dmMediaType;
+            public uint dmDitherType;
+            public uint dmReserved1;
+            public uint dmReserved2;
+            public uint dmPanningWidth;
+            public uint dmPanningHeight;
+        }
+
+        public static (uint dpiX, uint dpiY) GetDpiForMonitor(IntPtr hmonitor)
+        {
+            uint dpiX, dpiY;
+            var res = GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
+
+            if (res != 0)
+            {
+                throw new Exception($"GetDpiForMonitor failed with error code {res}");
+            }
+
+            return (dpiX, dpiY);
+
+        }
+
+        [DllImport("Shcore.dll")]
+        static extern int GetDpiForMonitor(
+             IntPtr hmonitor,
+             MonitorDpiType dpiType,
+             out uint dpiX,
+             out uint dpiY);
+
+        enum MonitorDpiType
+        {
+            MDT_EFFECTIVE_DPI = 0,
+            MDT_ANGULAR_DPI = 1,
+            MDT_RAW_DPI = 2
+        }
+
+    }
+
 
 }
 
