@@ -172,7 +172,7 @@ namespace RefreshRateWpfApp
             RadioButtinAcualResMode.IsChecked = !RadioButtinAllResMode.IsChecked;
             DirtySetting = false;
 
-            monitorLastInfo = GetMONITORINFOEXW();
+            monitorDeviceSzLast = GetMonitorSzDevice();
 
             SystemEvents.DisplaySettingsChanged += (s, e) =>
             {
@@ -187,12 +187,12 @@ namespace RefreshRateWpfApp
         private void OnLocationOrSizeChanged(object sender, EventArgs e)
         {
 
-            var actualMonitor = GetMONITORINFOEXW();
-            if (monitorLastInfo.szDevice == actualMonitor.szDevice)
+            var actualMonitor = GetMonitorSzDevice();
+            if (monitorDeviceSzLast == actualMonitor)
             {
                 return;
             }
-            monitorLastInfo = actualMonitor;
+            monitorDeviceSzLast = actualMonitor;
             OnTimerTick(sender, e);
         }
 
@@ -227,7 +227,13 @@ namespace RefreshRateWpfApp
         delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
 
 
-        MONITORINFOEXW monitorLastInfo;
+        string monitorDeviceSzLast;
+
+        string GetMonitorSzDevice()
+        {
+            var monitorInfo = GetMONITORINFOEXW();
+            return monitorInfo.szDevice;
+        }
         MONITORINFOEXW GetMONITORINFOEXW()
         {
             // 1. Get the window handle ("HWND" in Win32 parlance)
@@ -407,7 +413,6 @@ namespace RefreshRateWpfApp
             public IntPtr Handle { get; set; }
             public string SzDevice { get; set; }
 
-
             public int Left;
             public int Top;
             public int Right;
@@ -416,7 +421,7 @@ namespace RefreshRateWpfApp
 
         }
 
-        private List<MonitorDeviceInfo> GetmonitorInfoHandlesList()
+        private List<MonitorDeviceInfo> GetMonitorInfoHandlesList()
         {
             //monitorInfoHandlesList.Clear();
             var monitorInfoHandlesListTemp = new List<(IntPtr handle, MONITORINFOEXW info)>();
@@ -449,7 +454,7 @@ namespace RefreshRateWpfApp
         {
 
             //monitorInfoHandlesList.Clear();
-            monitorInfoHandlesList.AddRange(GetmonitorInfoHandlesList());
+            monitorInfoHandlesList.AddRange(GetMonitorInfoHandlesList());
 
 
             List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
@@ -716,8 +721,8 @@ namespace RefreshRateWpfApp
             var width = target.Right - target.Left;
             var height = target.Bottom - target.Top ;
 
-            uint dpiX, dpiY;
-            GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
+            (uint dpiX, uint dpiY) = GetDpiForMonitor(hmonitor);
+            //GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
 
             var dpiScaleX = dpiX / 96.0;
             var dpiScaleY = dpiY / 96.0;
@@ -974,6 +979,19 @@ namespace RefreshRateWpfApp
             public uint dmPanningHeight;
         }
 
+        public (uint dpiX, uint dpiY) GetDpiForMonitor(IntPtr hmonitor)
+        {
+            uint dpiX, dpiY;
+            var res = GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI,  out dpiX, out dpiY);
+            
+            if (res != 0)
+            {
+                throw new Exception($"GetDpiForMonitor failed with error code {res}");
+            }
+
+            return (dpiX, dpiY);
+
+        }
 
         [DllImport("Shcore.dll")]
         static extern int GetDpiForMonitor(
