@@ -507,23 +507,9 @@ namespace RefreshRateWpfApp
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
 
-
-
             var resSettings = (RefreshDataModel)((Button)sender).DataContext;
-            
-            
-            var actualRefreshAndResolution = WinApiWrapper.GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay);
 
-
-            WinApiWrapper.SetResolutionAndFrequerency(resSettings);
-            var splitInfo = WinApiWrapper.GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay)
-                .FullNameWithMonitorDisplayAndName.Split('@');
-
-            var infoString1 = splitInfo[0].Trim() + " @ " + splitInfo[1].Trim();
-            var infoString2 = "Display: " + splitInfo[2].Trim().Last();
-
-
-            //SetLabelRefreshRateAndHeader(infoString);
+            var (infoString1, infoString2) = MonitorService.ApplyTestSettings(resSettings, out var originalSettings);
 
             StackPanelAll.IsEnabled = false;
 
@@ -532,7 +518,6 @@ namespace RefreshRateWpfApp
             SetMonitorsList();
 
            
-
             var (horizontalOffset, verticalOffset) = MonitorService.CalctulatePopupPosition(resSettings, Popup.Width, Popup.Height);
 
             Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
@@ -549,19 +534,16 @@ namespace RefreshRateWpfApp
 
             await Task.Run(async () =>
             {
-
                 for (int i = TestTime; i > 0; i--)
                 {
-
                     this.Dispatcher.Invoke(() => { Popup_Label_Counter.Content = i; });
                     await Task.Delay(1000);
                 }
-
             });
 
             StackPanelAll.IsEnabled = true;
 
-            WinApiWrapper.SetResolutionAndFrequerency(actualRefreshAndResolution);
+            WinApiWrapper.SetResolutionAndFrequerency(originalSettings);
 
             SetLabelRefreshRateAndHeader(WinApiWrapper.GetActualResolutionAndRefresRate());
             Popup.IsOpen = false;
