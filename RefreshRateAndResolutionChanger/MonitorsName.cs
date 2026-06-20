@@ -79,14 +79,17 @@ namespace RefreshRateAndResolutionChanger
 
                 foreach (ManagementObject m in results)
                 {
-                    string instanceName = m["InstanceName"].ToString();
+                    using (m)
+                    {
+                        string instanceName = m["InstanceName"].ToString();
 
-                    string name = Decode(m["UserFriendlyName"] as ushort[]);
-                    string manufacturer = Decode(m["ManufacturerName"] as ushort[]);
+                        string name = Decode(m["UserFriendlyName"] as ushort[]);
+                        string manufacturer = Decode(m["ManufacturerName"] as ushort[]);
 
-                    string key = instanceName.Split('\\')[1]; // identyfikator sprzętu
+                        string key = instanceName.Split('\\')[1]; // identyfikator sprzętu
 
-                    dict[key] = $"{manufacturer} {name}";
+                        dict[key] = $"{manufacturer} {name}";
+                    }
                 }
             }
 
