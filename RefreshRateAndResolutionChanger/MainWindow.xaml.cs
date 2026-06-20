@@ -506,7 +506,12 @@ namespace RefreshRateWpfApp
 
         private async void Button_Click_TestAsync(object sender, RoutedEventArgs e)
         {
+
+
+
             var resSettings = (RefreshDataModel)((Button)sender).DataContext;
+            
+            
             var actualRefreshAndResolution = WinApiWrapper.GetActualResolutionAndRefresRateFromMonitor(resSettings.MonitorDisplay);
 
 
@@ -526,68 +531,14 @@ namespace RefreshRateWpfApp
 
             SetMonitorsList();
 
-            // znajdź DISPLAY
+           
 
-            var targetDisplay = MonitorState.MonitorInfoNamesList.FirstOrDefault(m => m.IdName == resSettings.MonitorIdName)?.DisplayName;
-
-            if (string.IsNullOrEmpty(targetDisplay))
-            {
-                MessageBox.Show("Some error. Monitor not found.");
-                StackPanelAll.IsEnabled = true;
-                return;
-            }
-
-            var target = MonitorState.MonitorInfoHandlesList.FirstOrDefault(m => m.SzDevice == targetDisplay);
-
-            if (target == null)
-            {
-                MessageBox.Show("Some error. Monitor handle not found.");
-                StackPanelAll.IsEnabled = true;
-                return;
-            }
-
-            IntPtr hmonitor = target.Handle;
-
-            //var rectMon = target.info.rcMonitor;
-
-            var width = target.Right - target.Left;
-            var height = target.Bottom - target.Top;
-
-            (uint dpiX, uint dpiY) = WinApiWrapper.GetDpiForMonitor(hmonitor);
-            //GetDpiForMonitor(hmonitor, MonitorDpiType.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
-
-            var dpiScaleX = dpiX / 96.0;
-            var dpiScaleY = dpiY / 96.0;
-
-            /////////////////
-            // get dpi
-            //var dpiScaleX = VisualTreeHelper.GetDpi(this).DpiScaleX;
-            //var dpiScaleY = VisualTreeHelper.GetDpi(this).DpiScaleY;
-
-            // get screen size
-
-            var screenWidth = width / dpiScaleX;
-            var screenHeight = height / dpiScaleY;
-
-            //var screenWidth = SystemParameters.PrimaryScreenWidth / dpiScaleX;
-            //var screenHeight = SystemParameters.PrimaryScreenHeight / dpiScaleY;
-
-
-            var popupWidth = Popup.Width;
-            var popupHeight = Popup.Height;
-
-            var scaledWidth = popupWidth / dpiScaleX;
-            var scaledHeight = popupHeight / dpiScaleY;
-
-            var offsetX = (screenWidth - popupWidth) / 2;
-            var offsetY = (screenHeight - popupHeight) / 2;
-
+            var (horizontalOffset, verticalOffset) = MonitorService.CalctulatePopupPosition(resSettings, Popup.Width, Popup.Height);
 
             Popup.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
-            //Popup.HorizontalOffset = offsetX;
-            //Popup.VerticalOffset = offsetY;
-            Popup.HorizontalOffset = target.Left / dpiScaleX + offsetX;
-            Popup.VerticalOffset = target.Top / dpiScaleY + offsetY;
+            
+            Popup.HorizontalOffset = horizontalOffset       ;
+            Popup.VerticalOffset = verticalOffset;
 
             //////////////////////////////////
 
