@@ -35,5 +35,8 @@ namespace RefreshRateAndResolutionChanger
         }
 
         void SaveToFile()
+        {
+            // Implement saving to file logic here
+        }   
     }
 }
