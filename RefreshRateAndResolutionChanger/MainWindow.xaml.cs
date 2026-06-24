@@ -64,7 +64,7 @@ namespace RefreshRateWpfApp
             {
                 _runStartup = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RunStartup)));
-                SetRunSatartup();
+                SetRunAtStartup();
             }
         }
 
@@ -110,28 +110,9 @@ namespace RefreshRateWpfApp
             }
         }
 
-        void SetRunSatartup()
+        void SetRunAtStartup()
         {
-            using (Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser
-                 .OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-
-                if (reg == null) return;
-                var key2 = reg.GetValue("RefreshRateApp");
-                if (_runStartup)
-                {
-                    reg.SetValue("RefreshRateApp", Process.GetCurrentProcess().MainModule.FileName);
-                }
-                else
-                {
-                    var key = reg.GetValue("RefreshRateApp");
-                    if (key == null) return;
-
-                    reg.DeleteValue("RefreshRateApp");
-
-                }
-                reg.Close();
-            }
+            IOService.SetRunAtStartup(_runStartup);
 
         }
 
@@ -172,7 +153,7 @@ namespace RefreshRateWpfApp
             //DestroyIcon(newIcon.Handle);
 
             if (RunAsMinimalized) Hide();
-            SetRunSatartup();
+            SetRunAtStartup();
 
             RadioButtinAcualResMode.IsChecked = !RadioButtinAllResMode.IsChecked;
             DirtySetting = false;

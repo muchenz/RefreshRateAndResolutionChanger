@@ -117,6 +117,7 @@
     <Compile Include="AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="IOService.cs" />
     <Compile Include="MonitorService.cs" />
     <Compile Include="MonitorsName.cs" />
     <Compile Include="Resource1.Designer.cs">
