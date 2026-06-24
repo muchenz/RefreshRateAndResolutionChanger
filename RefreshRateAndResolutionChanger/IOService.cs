@@ -33,5 +33,7 @@ namespace RefreshRateAndResolutionChanger
             }
 
         }
+
+        void SaveToFile()
     }
 }

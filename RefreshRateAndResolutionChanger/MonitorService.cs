@@ -10,6 +10,26 @@ namespace RefreshRateAndResolutionChanger
     public  class MonitorService
     {
 
+        public static bool RefreshMonitorsLists()
+        {
+            //monitorInfoHandlesList.Clear();
+            MonitorState.MonitorInfoHandlesList.Clear();
+            MonitorState.MonitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
+
+
+            List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
+
+            bool monitorsChanged = !MonitorState.MonitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName));
+
+            if (monitorsChanged)
+            {
+                MonitorState.MonitorInfoNamesList = monitorsNewList;
+            }
+            return monitorsChanged;
+        }
+
+
+
 
         public static (string resolutionInfo, string displayInfo) ApplyTestSettings(RefreshDataModel resSettings, out RefreshDataModel originalSettings)
         {

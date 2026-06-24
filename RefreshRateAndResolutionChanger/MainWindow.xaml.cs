@@ -272,23 +272,9 @@ namespace RefreshRateWpfApp
 
         private void SetMonitorsList()
         {
-
-            //monitorInfoHandlesList.Clear();
-            MonitorState.MonitorInfoHandlesList.Clear();
-            MonitorState.MonitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
-
-
-            List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
-
-            if (!MonitorState.MonitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName)))
-            //if (monitorInfoHandlesList.Count != monitorsOldCount)
+            if (MonitorService.RefreshMonitorsLists())
             {
-                // _monitorInfoNamesList = monitorsNewList;
-                // WinApiWrapper.MonitorInfoNamesList = _monitorInfoNamesList; //must the same 
-
-                MonitorState.MonitorInfoNamesList = monitorsNewList;
-
-                IsMoreThenOneMonitor = monitorsNewList.Count > 1;
+                IsMoreThenOneMonitor = MonitorState.MonitorInfoNamesList.Count > 1;
                 SetProperDisplayNumberInPossibleRefreshrateList();
                 SetTrayFromActualTryList();
 
@@ -421,6 +407,9 @@ namespace RefreshRateWpfApp
 
             // using (var file = new StreamWriter("RefreshRate.cfg"))
             var path = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "RefreshRate.cfg");
+
+
+
             using (var file = new StreamWriter(path))
             {
                 listToSave.ForEach(a => file.WriteLine(a));
