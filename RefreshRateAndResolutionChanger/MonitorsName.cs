@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RefreshRateWpfApp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
@@ -22,18 +23,18 @@ namespace RefreshRateAndResolutionChanger
             var wmiNames = GetWmiMonitorNames();
 
             uint devNum = 0;
-            DISPLAY_DEVICE d = new DISPLAY_DEVICE();
+            WinApiWrapper.DISPLAY_DEVICE d = new WinApiWrapper.DISPLAY_DEVICE();
             d.cb = Marshal.SizeOf(d);
 
-            while (EnumDisplayDevices(null, devNum, ref d, 0))
+            while (WinApiWrapper.EnumDisplayDevices(null, devNum, ref d, 0))
             {
-                if ((d.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0)
+                if ((d.StateFlags & WinApiWrapper.DISPLAY_DEVICE_ACTIVE) != 0)
                 {
-                    DISPLAY_DEVICE monitor = new DISPLAY_DEVICE();
+                    WinApiWrapper.DISPLAY_DEVICE monitor = new WinApiWrapper.DISPLAY_DEVICE();
                     monitor.cb = Marshal.SizeOf(monitor);
 
                     uint devNum2 = 0;
-                    while (EnumDisplayDevices(d.DeviceName, devNum2, ref monitor, 0))
+                    while (WinApiWrapper.EnumDisplayDevices(d.DeviceName, devNum2, ref monitor, 0))
                     {
                         string deviceId = monitor.DeviceID;
 
@@ -55,14 +56,14 @@ namespace RefreshRateAndResolutionChanger
                             IdName = friendly
                         });
                         devNum2++;
-                        monitor = new DISPLAY_DEVICE();
+                        monitor = new WinApiWrapper.DISPLAY_DEVICE();
                         monitor.cb = Marshal.SizeOf(monitor);
 
                     }
                 }
 
                 devNum++;
-                d = new DISPLAY_DEVICE();
+                d = new WinApiWrapper.DISPLAY_DEVICE();
                 d.cb = Marshal.SizeOf(d);
             }
 
@@ -111,34 +112,6 @@ namespace RefreshRateAndResolutionChanger
 
         // WinAPI
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct DISPLAY_DEVICE
-        {
-            public int cb;
 
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string DeviceName;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string DeviceString;
-
-            public int StateFlags;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string DeviceID;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-            public string DeviceKey;
-        }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern bool EnumDisplayDevices(
-            string lpDevice,
-            uint iDevNum,
-            ref DISPLAY_DEVICE lpDisplayDevice,
-            uint dwFlags
-        );
-
-        const int DISPLAY_DEVICE_ACTIVE = 0x1;
     }
 }

@@ -264,7 +264,7 @@ namespace RefreshRateWpfApp
             public int Top;
             public int Right;
             public int Bottom;
-
+            public List<string> DeviceIds { get; set; } = new List<string>();
 
         }
 
@@ -1342,6 +1342,8 @@ namespace RefreshRateWpfApp
 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
 
+
+
             return monitorInfoHandlesListTemp.Select(a => new MonitorDeviceInfo
             {
                 Handle = a.handle,
@@ -1528,9 +1530,42 @@ namespace RefreshRateWpfApp
             MDT_RAW_DPI = 2
         }
 
+        
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct DISPLAY_DEVICE
+        {
+            public int cb;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string DeviceName;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceString;
+
+            public int StateFlags;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceID;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string DeviceKey;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool EnumDisplayDevices(
+            string lpDevice,
+            uint iDevNum,
+            ref DISPLAY_DEVICE lpDisplayDevice,
+            uint dwFlags
+        );
+
+        public const int DISPLAY_DEVICE_ACTIVE = 0x1;
     }
 
 }
+
+
 
 
 
