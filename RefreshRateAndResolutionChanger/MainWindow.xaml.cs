@@ -264,7 +264,6 @@ namespace RefreshRateWpfApp
             public int Top;
             public int Right;
             public int Bottom;
-            public List<string> DeviceIds { get; set; } = new List<string>();
 
         }
 

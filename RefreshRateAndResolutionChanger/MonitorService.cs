@@ -12,24 +12,26 @@ namespace RefreshRateAndResolutionChanger
 
         public static bool RefreshMonitorsLists()
         {
-            //monitorInfoHandlesList.Clear();
-            MonitorState.MonitorInfoHandlesList.Clear();
-            MonitorState.MonitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
+            var monitorInfoHandlesList = WinApiWrapper.GetMonitorInfoHandlesList();
 
 
             List<MonitorInfo> monitorsNewList = MonitorsName.GetMonitors();
 
-            bool monitorsChanged = !MonitorState.MonitorInfoNamesList.Select(a => a.IdName).SequenceEqual(monitorsNewList.Select(a => a.IdName));
+            bool monitorsChanged = !MonitorState.MonitorInfoNamesList
+                .Select(a => new { a.IdName, a.DisplayName }).SequenceEqual(monitorsNewList.Select(a => new { a.IdName, a.DisplayName }));
 
             if (monitorsChanged)
             {
+
+                MonitorState.MonitorInfoHandlesList.Clear();
+                MonitorState.MonitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
+
                 MonitorState.MonitorInfoNamesList = monitorsNewList;
+                return true;
             }
-            return monitorsChanged;
+            return false;
+
         }
-
-
-
 
         public static (string resolutionInfo, string displayInfo) ApplyTestSettings(RefreshDataModel resSettings, out RefreshDataModel originalSettings)
         {
