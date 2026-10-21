@@ -1376,6 +1376,9 @@ namespace RefreshRateWpfApp
             //ChangeDisplaySettingsW(ref devMode, 0);
             var res = ChangeDisplaySettingsExW(settingsToSet.MonitorDisplay, ref devMode, IntPtr.Zero, 0, IntPtr.Zero);
 
+            MonitorState.MonitorInfoHandlesList.Clear();
+            MonitorState.MonitorInfoHandlesList.AddRange(WinApiWrapper.GetMonitorInfoHandlesList());
+
             // szDevice id string eg "\\\\.\\DISPLAY2" for secod monitor
 
             // Done!
